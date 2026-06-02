@@ -1,0 +1,40 @@
+# Node/Expo
+node_modules/
+.expo/
+.expo-shared/
+.expo/
+web-build/
+.expo-shared/
+
+# Metro
+.metro-cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+/dist/
+/build/
+
+# Optional React Native
+android/
+ios/
+
+# Temporary
+*.tmp
+*.temp

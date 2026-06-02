@@ -1,0 +1,36 @@
+{
+  "name": "pos-copycenter",
+  "version": "1.0.0",
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "ts:check": "tsc"
+  },
+  "dependencies": {
+    "@react-native-community/datetimepicker": "8.0.1",
+    "@react-native-community/netinfo": "^11.3.1",
+    "@react-native-picker/picker": "2.7.5",
+    "@react-navigation/bottom-tabs": "^6.0.0",
+    "@react-navigation/native": "^6.0.0",
+    "@react-navigation/stack": "^6.0.0",
+    "@supabase/supabase-js": "^2.43.0",
+    "expo": "~51.0.0",
+    "expo-asset": "~10.0.0",
+    "expo-file-system": "~17.0.0",
+    "expo-haptics": "~13.0.0",
+    "expo-print": "~13.0.0",
+    "expo-secure-store": "~13.0.0",
+    "expo-sharing": "~12.0.0",
+    "expo-sqlite": "~14.0.0",
+    "expo-status-bar": "~1.12.0",
+    "react": "18.2.0",
+    "react-native": "^0.74.5",
+    "react-native-gesture-handler": "~2.16.1",
+    "react-native-safe-area-context": "4.10.5",
+    "react-native-screens": "~3.31.0"
+  },
+  "private": true
+}

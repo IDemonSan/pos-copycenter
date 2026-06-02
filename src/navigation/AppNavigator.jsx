@@ -1,0 +1,149 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
+import { Ionicons } from '@expo/vector-icons';
+
+import HomeScreen from '../screens/HomeScreen';
+import POSScreen from '../screens/POSScreen';
+import SalonesScreen from '../screens/SalonesScreen';
+import AulaDetailScreen from '../screens/AulaDetailScreen';
+import ConfigScreen from '../screens/ConfigScreen';
+import ProductoEditScreen from '../screens/ProductoEditScreen';
+import SyncStatusIcon from '../components/SyncStatusIcon';
+import ReconnectBanner from '../components/ReconnectBanner';
+
+const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+
+
+// Opciones de header comunes con el SyncStatusIcon
+const defaultStackOptions = {
+  headerStyle: {
+    backgroundColor: '#1f2937',
+  },
+  headerTintColor: '#fff',
+  headerTitleStyle: {
+    fontWeight: 'bold',
+  },
+  headerRight: () => <SyncStatusIcon />,
+};
+
+function InicioStack() {
+  return (
+    <Stack.Navigator screenOptions={defaultStackOptions}>
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: 'Inicio' }}
+      />
+      <Stack.Screen
+        name="AulaDetail"
+        component={AulaDetailScreen}
+        options={{ title: 'Detalle de Aula' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function SalonesStack() {
+  return (
+    <Stack.Navigator screenOptions={defaultStackOptions}>
+      <Stack.Screen
+        name="SalonesHome"
+        component={SalonesScreen}
+        options={{ title: 'Salones' }}
+      />
+      <Stack.Screen
+        name="AulaDetail"
+        component={AulaDetailScreen}
+        options={{ title: 'Detalle de Aula' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function ConfigStack() {
+  return (
+    <Stack.Navigator screenOptions={defaultStackOptions}>
+      <Stack.Screen
+        name="ConfigHome"
+        component={ConfigScreen}
+        options={{ title: 'Configuración' }}
+      />
+      <Stack.Screen
+        name="ProductoEdit"
+        component={ProductoEditScreen}
+        options={{ title: 'Editar Producto' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+export default function AppNavigator() {
+  return (
+    <View style={{ flex: 1 }}>
+      <ReconnectBanner />
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+
+            if (route.name === 'InicioTab') {
+              iconName = focused ? 'home' : 'home-outline';
+            } else if (route.name === 'POS') {
+              iconName = focused ? 'add-circle' : 'add-circle-outline';
+              // Botón central de POS más grande
+              return <Ionicons name={iconName} size={32} color={color} />;
+            } else if (route.name === 'Salones') {
+              iconName = focused ? 'people' : 'people-outline';
+            } else if (route.name === 'ConfigTab') {
+              iconName = focused ? 'settings' : 'settings-outline';
+            }
+
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: '#3b82f6',
+          tabBarInactiveTintColor: '#9ca3af',
+          tabBarStyle: {
+            backgroundColor: '#ffffff',
+            borderTopColor: '#e5e7eb',
+            height: 60,
+            paddingBottom: 8,
+          },
+        })}
+      >
+        <Tab.Screen
+          name="InicioTab"
+          component={InicioStack}
+          options={{ title: 'Inicio', headerShown: false }}
+        />
+        <Tab.Screen
+          name="POS"
+          component={POSScreen}
+          options={{
+            title: 'Nueva Venta',
+            headerStyle: { backgroundColor: '#1f2937' },
+            headerTintColor: '#fff',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerRight: () => <SyncStatusIcon />,
+          }}
+        />
+        <Tab.Screen
+          name="Salones"
+          component={SalonesStack}
+          options={{ title: 'Salones', headerShown: false }}
+        />
+        <Tab.Screen
+          name="ConfigTab"
+          component={ConfigStack}
+          options={{
+            title: 'Config',
+            headerShown: false,
+          }}
+        />
+      </Tab.Navigator>
+    </View>
+  );
+}
