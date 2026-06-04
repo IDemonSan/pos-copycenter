@@ -11,11 +11,13 @@ export async function seedProductos(db) {
     if (count === 0) {
       const now = new Date().toISOString();
       const PRODUCTOS_INICIALES = [
-        { id: 'prod-001', nombre: 'Copia B/N',        precio_cents: 10,  is_variable: 0, orden_prioridad: 1, activo: 1 },
-        { id: 'prod-002', nombre: 'Copia Doble Cara',  precio_cents: 15,  is_variable: 0, orden_prioridad: 2, activo: 1 },
-        { id: 'prod-003', nombre: 'Impresión Color',   precio_cents: 50,  is_variable: 0, orden_prioridad: 3, activo: 1 },
-        { id: 'prod-004', nombre: 'Impresión B/N',     precio_cents: 20,  is_variable: 0, orden_prioridad: 4, activo: 1 },
-        { id: 'prod-005', nombre: 'Servicio Especial', precio_cents: 0,   is_variable: 1, orden_prioridad: 5, activo: 1 },
+        { id: 'prod-001', nombre: 'Copia B/N A4',        precio_cents: 10,  is_variable: 0, orden_prioridad: 1, activo: 1 },
+        { id: 'prod-002', nombre: 'Copia color A4',  precio_cents: 30,  is_variable: 0, orden_prioridad: 2, activo: 1 },
+        { id: 'prod-003', nombre: 'Copia B/N A3',   precio_cents: 100,  is_variable: 0, orden_prioridad: 3, activo: 1 },
+        { id: 'prod-004', nombre: 'Copia color A3',     precio_cents: 200,  is_variable: 0, orden_prioridad: 4, activo: 1 },
+        { id: 'prod-005', nombre: 'Impresión simple', precio_cents: 30,   is_variable: 0, orden_prioridad: 5, activo: 1 },
+        { id: 'prod-006', nombre: 'Impresión A4', precio_cents: 50,   is_variable: 0, orden_prioridad: 5, activo: 1 },
+        { id: 'prod-007', nombre: 'Impresión A4 color', precio_cents: 100,   is_variable: 0, orden_prioridad: 5, activo: 1 },
       ];
 
       await db.execAsync('BEGIN TRANSACTION;');

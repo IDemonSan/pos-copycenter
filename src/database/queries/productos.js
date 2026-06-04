@@ -49,13 +49,14 @@ export async function insertarProducto(db, producto) {
   try {
     const now = new Date().toISOString();
     await db.runAsync(
-      `INSERT INTO productos (id, nombre, precio_cents, is_variable, orden_prioridad, activo, is_synced, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 0, ?);`,
+      `INSERT INTO productos (id, nombre, precio_cents, is_variable, is_custom, orden_prioridad, activo, is_synced, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?);`,
       [
         producto.id,
         producto.nombre,
         producto.precio_cents,
         producto.is_variable ?? 0,
+        producto.is_custom ?? 0,
         producto.orden_prioridad ?? 0,
         producto.activo ?? 1,
         now
@@ -75,6 +76,7 @@ export async function insertarProducto(db, producto) {
  * @param {string} producto.nombre Nombre del producto
  * @param {number} producto.precio_cents Precio en centavos
  * @param {number} producto.is_variable 1 o 0
+ * @param {number} producto.is_custom 1 o 0
  * @param {number} producto.orden_prioridad Orden de prioridad
  * @param {number} producto.activo 1 o 0
  * @returns {Promise<void>}
@@ -87,6 +89,7 @@ export async function actualizarProducto(db, producto) {
        SET nombre = ?,
            precio_cents = ?,
            is_variable = ?,
+           is_custom = ?,
            orden_prioridad = ?,
            activo = ?,
            is_synced = 0,
@@ -96,6 +99,7 @@ export async function actualizarProducto(db, producto) {
         producto.nombre,
         producto.precio_cents,
         producto.is_variable,
+        producto.is_custom ?? 0,
         producto.orden_prioridad,
         producto.activo,
         now,

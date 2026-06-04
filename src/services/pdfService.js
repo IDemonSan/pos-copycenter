@@ -1,8 +1,8 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDetalleVenta } from '../database/queries/ventas';
 
 const MESES = [
@@ -45,34 +45,76 @@ function formatReadableDate(dateString) {
 }
 
 /**
- * Convierte un asset local de Expo a formato Base64.
+ * Convierte una URI de archivo local a Base64.
  */
-async function getQRBase64(assetModule) {
+async function getLocalFileBase64(fileUri) {
+  if (!fileUri) return '';
   try {
-    const asset = Asset.fromModule(assetModule);
-    await asset.downloadAsync();
-    const uri = asset.localUri || asset.uri;
-    const base64 = await FileSystem.readAsStringAsync(uri, {
+    const base64 = await FileSystem.readAsStringAsync(fileUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
-    return `data:image/png;base64,${base64}`;
+    return `data:image/jpeg;base64,${base64}`;
   } catch (e) {
-    console.error('[PDF Service] Error al cargar QR en Base64:', e);
-    // Retornar un pixel transparente en Base64 para evitar errores de renderizado en HTML
-    return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+    console.error('[PDF Service] Error al cargar archivo local en Base64:', e);
+    return '';
   }
 }
 
 /**
- * Genera el PDF de liquidación mensual y abre el Share Sheet.
- * @param {import('expo-sqlite').SQLiteDatabase} db Instancia de la BD
- * @param {Object} params
- * @param {string} params.aula Aula del reporte (ej: "3° A")
- * @param {string} params.turno Turno (ej: "Mañana")
- * @param {string} params.mes Período en formato "YYYY-MM"
- * @returns {Promise<void>}
+ * Intercepta y valida los medios de pago antes de generar el PDF de liquidación.
  */
-export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
+export async function generarPDFLiquidacion(db, { aula, turno, mes, navigation }) {
+  try {
+    // 1. Consultar medios de pago
+    const medios = await db.getAllAsync('SELECT * FROM medios_pago ORDER BY id ASC;');
+    
+    // 2. Consultar AsyncStorage
+    const omitirAdvertencia = await AsyncStorage.getItem('@config_omitir_advertencia_qr');
+    
+    if (medios.length === 0 && omitirAdvertencia !== 'true') {
+      // Detener y disparar alerta
+      Alert.alert(
+        'Sin medios de pago',
+        '¿Seguro que desea generar la boleta de pago sin medios de pago?',
+        [
+          {
+            text: 'Agregar ahora',
+            onPress: () => {
+              if (navigation) {
+                navigation.navigate('ConfigTab', { screen: 'MediosPago' });
+              }
+            }
+          },
+          {
+            text: 'Sí',
+            onPress: () => {
+              ejecutarGeneracionPDF(db, { aula, turno, mes, medios: [] });
+            }
+          },
+          {
+            text: 'Sí y no volver a preguntar',
+            onPress: async () => {
+              await AsyncStorage.setItem('@config_omitir_advertencia_qr', 'true');
+              ejecutarGeneracionPDF(db, { aula, turno, mes, medios: [] });
+            }
+          }
+        ]
+      );
+      return;
+    }
+
+    // Continuar directamente
+    await ejecutarGeneracionPDF(db, { aula, turno, mes, medios });
+  } catch (error) {
+    console.error('[PDF Service] Error en interceptor de PDF:', error);
+    Alert.alert('Error', 'Ocurrió un error al procesar el documento.');
+  }
+}
+
+/**
+ * Ejecuta la generación física del PDF y abre el Share Sheet.
+ */
+async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
   // Verificar disponibilidad de compartir
   const isSharingAvailable = await Sharing.isAvailableAsync();
   if (!isSharingAvailable) {
@@ -80,12 +122,12 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
     return;
   }
 
-  // 1. Obtener todas las ventas activas (no anuladas) del aula-turno en el mes especificado
+  // 1. Obtener todas las ventas activas (no anuladas) del aula en el mes especificado
   const ventas = await db.getAllAsync(
     `SELECT * FROM ventas
-     WHERE aula = ? AND turno = ? AND strftime('%Y-%m', fecha_venta) = ? AND anulado_at IS NULL
+     WHERE aula = ? AND strftime('%Y-%m', fecha_venta) = ? AND anulado_at IS NULL
      ORDER BY fecha_venta ASC, fecha_registro ASC;`,
-    [aula, turno, mes]
+    [aula, mes]
   );
 
   if (ventas.length === 0) {
@@ -93,56 +135,57 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
     return;
   }
 
-  // 2. Cargar QR base64
-  // INSTRUCCIÓN PARA LA ENCARGADA:
-  // Para usar tu QR real de Yape/Plin:
-  // 1. Toma una foto de tu QR de Yape/Plin
-  // 2. Renómbrala a "qr-yape.png" y "qr-plin.png"
-  // 3. Reemplaza el archivo en la carpeta "assets/"
-  const qrYapeBase64 = await getQRBase64(require('../../assets/qr-yape.png'));
-  const qrPlinBase64 = await getQRBase64(require('../../assets/qr-plin.png'));
-
-  // 3. Cargar detalles y armar filas HTML
+  // 2. Agrupar consumos por fecha
+  const ventasPorFecha = {};
   let totalCents = 0;
   let pendienteCents = 0;
-  let filasHTML = '';
 
   for (const sale of ventas) {
-    const detalles = await getDetalleVenta(db, sale.id);
-    const rowSpan = detalles.length;
-    const readableDate = formatReadableDate(sale.fecha_venta);
-    
-    const statusText = sale.estado_pago === 1 
-      ? '<span class="pagado">Pagado</span>' 
-      : '<span class="pendiente">Pendiente</span>';
-
     totalCents += sale.total_cents;
     if (sale.estado_pago === 0) {
       pendienteCents += sale.total_cents;
     }
 
-    detalles.forEach((det, idx) => {
-      filasHTML += '<tr>';
+    const detalles = await getDetalleVenta(db, sale.id);
+    const readableDate = formatReadableDate(sale.fecha_venta);
+    
+    if (!ventasPorFecha[readableDate]) {
+      ventasPorFecha[readableDate] = [];
+    }
+    ventasPorFecha[readableDate].push(...detalles);
+  }
+
+  // 3. Armar filas HTML agrupadas por fecha
+  let filasHTML = '';
+  const fechasOrdenadas = Object.keys(ventasPorFecha);
+
+  for (const fecha of fechasOrdenadas) {
+    const detalles = ventasPorFecha[fecha];
+    for (let i = 0; i < detalles.length; i++) {
+      const det = detalles[i];
+      const cantidadTexto = det.detalle_multiplicador
+        ? `${det.cantidad} (${det.detalle_multiplicador})`
+        : `${det.cantidad}`;
+
+      filasHTML += `
+        <tr>
+      `;
       
-      // La celda de fecha tiene rowspan si hay múltiples líneas en la misma venta
-      if (idx === 0) {
-        filasHTML += `<td rowspan="${rowSpan}">${readableDate}</td>`;
+      if (i === 0) {
+        filasHTML += `
+          <td rowspan="${detalles.length}" style="vertical-align: middle; font-weight: bold; background-color: #fafafa; border-right: 1px solid #e5e7eb; text-align: center;">
+            ${fecha}
+          </td>
+        `;
       }
 
       filasHTML += `
-        <td>${det.producto_nombre}</td>
-        <td>${det.cantidad}</td>
-        <td>S/ ${(det.precio_unitario_cents / 100).toFixed(2)}</td>
-        <td>S/ ${(det.subtotal_cents / 100).toFixed(2)}</td>
+          <td>${det.producto_nombre}</td>
+          <td>${cantidadTexto}</td>
+          <td>S/ ${(det.subtotal_cents / 100).toFixed(2)}</td>
+        </tr>
       `;
-
-      // La celda de estado también tiene rowspan
-      if (idx === 0) {
-        filasHTML += `<td rowspan="${rowSpan}">${statusText}</td>`;
-      }
-
-      filasHTML += '</tr>';
-    });
+    }
   }
 
   const mesFormateado = formatMes(mes);
@@ -150,7 +193,43 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
   const totalFormateado = (totalCents / 100).toFixed(2);
   const montoPendienteFormateado = (pendienteCents / 100).toFixed(2);
 
-  // 4. Armar el HTML definitivo del PDF (usando tablas clásicas, sin Flexbox/CSS Grid)
+// 4. Inclusión dinámica de QRs de pago
+  let qrHTML = '';
+  if (medios && medios.length > 0) {
+    qrHTML += `
+      <div class="qr-section" style="margin-top: 25px;">
+        <h2 style="font-size: 14px; margin-bottom: 12px; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">Medios de Pago</h2>
+        <div class="qr-container" style="width: 100%; text-align: left;">
+    `;
+    
+    for (const medio of medios) {
+      const base64Img = await getLocalFileBase64(medio.qr_image_path);
+      if (base64Img) {
+        qrHTML += `
+          <div class="qr-card" style="display: inline-block; width: 30%; max-width: 160px; min-width: 130px; margin-right: 18px; margin-bottom: 18px; vertical-align: top; border: 1px solid #e5e7eb; padding: 10px; border-radius: 6px; text-align: center; background-color: #ffffff;">
+            
+            <div style="margin-bottom: 8px;">
+              <img src="${base64Img}" style="width: 110px; height: 110px; object-fit: contain; border-radius: 4px; display: inline-block;" />
+            </div>
+            
+            <div style="text-align: center;">
+              <strong style="font-size: 12px; color: #111827; display: block; margin-bottom: 3px; word-wrap: break-word;">${medio.banco_nombre}</strong>
+              <span style="font-size: 10px; color: #4b5563; line-height: 1.3; display: block; word-wrap: break-word;">${medio.descripcion || ''}</span>
+            </div>
+            
+          </div>
+        `;
+      }
+    }
+    
+    qrHTML += `
+          <div style="clear: both;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 5. Armar el HTML definitivo del PDF
   const htmlContent = `
   <!DOCTYPE html>
   <html>
@@ -165,12 +244,9 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
       td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; font-size: 11px; }
       .total-row td { font-weight: bold; font-size: 12px; border-top: 2px solid #9ca3af; border-bottom: 2px solid #9ca3af; background-color: #f9fafb; }
       .monto-grande { font-size: 20px; font-weight: bold; color: #dc2626; }
-      .pagado { color: #16a34a; font-weight: bold; }
-      .pendiente { color: #dc2626; font-weight: bold; }
       .footer { margin-top: 36px; font-size: 10px; color: #9ca3af; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 12px; }
-      .qr-section { margin-top: 24px; }
+      .qr-section { margin-top: 24px; page-break-inside: avoid; }
       .qr-section table { width: auto; }
-      .qr-section td { text-align: center; padding: 8px 16px; border: none; }
       .qr-img { width: 110px; height: 110px; border: 1px solid #e5e7eb; border-radius: 4px; }
     </style>
   </head>
@@ -187,18 +263,16 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
         <td style="border: none; padding: 2px 0;"></td>
       </tr>
     </table>
-
+ 
     <!-- TABLA DE VENTAS -->
     <h2>Detalle de Consumo</h2>
     <table>
       <thead>
         <tr>
-          <th>Fecha</th>
+          <th style="width: 100px; text-align: center;">Fecha</th>
           <th>Descripción</th>
-          <th>Cant.</th>
-          <th>P. Unit.</th>
-          <th>Subtotal</th>
-          <th>Estado</th>
+          <th style="width: 120px;">Cant.</th>
+          <th style="width: 120px;">Subtotal</th>
         </tr>
       </thead>
       <tbody>
@@ -206,13 +280,12 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
       </tbody>
       <tfoot>
         <tr class="total-row">
-          <td colspan="4">TOTAL DEL MES</td>
+          <td colspan="3" style="text-align: right; padding-right: 16px;">TOTAL DEL MES</td>
           <td>S/ ${totalFormateado}</td>
-          <td></td>
         </tr>
       </tfoot>
     </table>
-
+ 
     <!-- MONTO A PAGAR -->
     <table style="border: none; margin-top: 16px;">
       <tr style="border: none;">
@@ -220,24 +293,10 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
         <td style="border: none; text-align: right;"><span class="monto-grande">S/ ${montoPendienteFormateado}</span></td>
       </tr>
     </table>
-
-    <!-- QR DE PAGO -->
-    <div class="qr-section">
-      <h2>Medios de Pago</h2>
-      <table>
-        <tr>
-          <td>
-            <img src="${qrYapeBase64}" class="qr-img" /><br>
-            <span style="font-size: 11px; font-weight: bold; margin-top: 4px; display: inline-block;">Yape</span>
-          </td>
-          <td>
-            <img src="${qrPlinBase64}" class="qr-img" /><br>
-            <span style="font-size: 11px; font-weight: bold; margin-top: 4px; display: inline-block;">Plin</span>
-          </td>
-        </tr>
-      </table>
-    </div>
-
+ 
+    <!-- QR DE PAGO DINÁMICO -->
+    ${qrHTML}
+ 
     <!-- FOOTER -->
     <div class="footer">
       Documento generado automáticamente por el Sistema de Control de Copias del Colegio
@@ -246,7 +305,7 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes }) {
   </html>
   `;
 
-  // 5. Generar y abrir Share Sheet
+  // 6. Generar y abrir Share Sheet
   try {
     const safeAulaName = aula.replace(/[\s°]/g, '_');
     const { uri } = await Print.printToFileAsync({ html: htmlContent });

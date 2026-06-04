@@ -49,8 +49,8 @@ export async function insertarVenta(db, { venta, detalles }) {
       for (const det of detalles) {
         await db.runAsync(
           `INSERT INTO detalle_ventas (
-            id, venta_id, producto_id, producto_nombre, cantidad, precio_unitario_cents, subtotal_cents
-          ) VALUES (?, ?, ?, ?, ?, ?, ?);`,
+            id, venta_id, producto_id, producto_nombre, cantidad, precio_unitario_cents, subtotal_cents, detalle_multiplicador
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
           [
             det.id,
             venta.id, // forzar que coincida con la cabecera
@@ -58,7 +58,8 @@ export async function insertarVenta(db, { venta, detalles }) {
             det.producto_nombre,
             det.cantidad,
             det.precio_unitario_cents,
-            det.subtotal_cents
+            det.subtotal_cents,
+            det.detalle_multiplicador ?? null
           ]
         );
       }

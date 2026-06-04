@@ -17,10 +17,13 @@ import AulaCard from '../components/AulaCard';
 import COLORS from '../constants/colors';
 
 const AULAS = [
-  '1° A', '1° B', '2° A', '2° B', '3° A', '3° B',
-  '4° A', '4° B', '5° A', '5° B', '6° A', '6° B',
+  '1° A', '1° B', '1° C',
+  '2° A', '2° B', '2° C',
+  '3° A', '3° B', '3° C',
+  '4° A', '4° B', '4° C',
+  '5° A', '5° B', '5° C',
+  '6° A', '6° B', '6° C',
 ];
-const TURNOS = ['Mañana', 'Tarde'];
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -49,10 +52,10 @@ export default function SalonesScreen() {
       // 1. Obtener aulas con deuda del mes actual
       const dataDeudas = await getDeudaPorAula(db, mesActual);
       
-      // Mapear deudas por una clave "aula-turno" para fácil acceso
+      // Mapear deudas por aula para fácil acceso
       const deudasMap = new Map();
       dataDeudas.forEach(item => {
-        deudasMap.set(`${item.aula}-${item.turno}`, item);
+        deudasMap.set(item.aula, item);
       });
 
       // 2. Construir lista total de combinaciones
@@ -60,24 +63,22 @@ export default function SalonesScreen() {
       const listAlDia = [];
 
       for (const aula of AULAS) {
-        for (const turno of TURNOS) {
-          const key = `${aula}-${turno}`;
-          if (deudasMap.has(key)) {
-            const item = deudasMap.get(key);
-            listConDeuda.push({
-              aula,
-              turno,
-              deuda_cents: item.deuda_cents,
-              num_pedidos: item.num_pedidos,
-            });
-          } else {
-            listAlDia.push({
-              aula,
-              turno,
-              deuda_cents: 0,
-              num_pedidos: 0,
-            });
-          }
+        const derivedTurno = aula.endsWith('C') ? 'Tarde' : 'Mañana';
+        if (deudasMap.has(aula)) {
+          const item = deudasMap.get(aula);
+          listConDeuda.push({
+            aula,
+            turno: item.turno ?? derivedTurno,
+            deuda_cents: item.deuda_cents,
+            num_pedidos: item.num_pedidos,
+          });
+        } else {
+          listAlDia.push({
+            aula,
+            turno: derivedTurno,
+            deuda_cents: 0,
+            num_pedidos: 0,
+          });
         }
       }
 
@@ -162,7 +163,7 @@ export default function SalonesScreen() {
         ) : (
           <FlatList
             data={conDeuda}
-            keyExtractor={(item) => `${item.aula}-${item.turno}`}
+            keyExtractor={(item) => item.aula}
             renderItem={({ item }) => (
               <AulaCard
                 aula={item.aula}
@@ -194,7 +195,7 @@ export default function SalonesScreen() {
                   <View style={styles.alDiaList}>
                     {alDia.map((item) => (
                       <AulaCard
-                        key={`${item.aula}-${item.turno}`}
+                        key={item.aula}
                         aula={item.aula}
                         turno={item.turno}
                         deuda_cents={0}

@@ -12,8 +12,16 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
  * @param {number} props.item.subtotal_cents Subtotal en centavos
  * @param {(id: string) => void} props.onRemove Callback al pulsar para eliminar del carrito
  */
+function parsearMultiplicador(detalle_multiplicador) {
+  if (!detalle_multiplicador) return null;
+  const partes = detalle_multiplicador.split('x');
+  if (partes.length !== 2) return null;
+  return { paquetes: partes[0], hojas: partes[1] };
+}
+
 export default function CartItem({ item, onRemove }) {
   const formattedSubtotal = `S/ ${(item.subtotal_cents / 100).toFixed(2)}`;
+  const mul = parsearMultiplicador(item.detalle_multiplicador);
 
   return (
     <View style={styles.container}>
@@ -23,7 +31,13 @@ export default function CartItem({ item, onRemove }) {
         </Text>
       </View>
       <View style={styles.centerCol}>
-        <Text style={styles.quantity}>x{item.cantidad}</Text>
+        {mul ? (
+          <Text style={styles.cantidadMulti}>
+            {mul.paquetes} copias × {mul.hojas} originales = {item.cantidad}
+          </Text>
+        ) : (
+          <Text style={styles.quantity}>x{item.cantidad}</Text>
+        )}
       </View>
       <View style={styles.rightCol}>
         <Text style={styles.subtotal}>{formattedSubtotal}</Text>
@@ -57,13 +71,19 @@ const styles = StyleSheet.create({
     color: '#1f2937',
   },
   centerCol: {
-    flex: 1,
+    flex: 2.2,
     alignItems: 'center',
   },
   quantity: {
     fontSize: 14,
     color: '#6b7280',
     fontWeight: '500',
+  },
+  cantidadMulti: {
+    fontSize: 11,
+    color: '#3b82f6',
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   rightCol: {
     flex: 1.5,

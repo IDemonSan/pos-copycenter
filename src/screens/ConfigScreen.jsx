@@ -12,11 +12,15 @@ import {
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { getTodosLosProductos, intercambiarOrden } from '../database/queries/productos';
-import { exportarBackup } from '../services/backupService';
+import { subirDatosPendientes, descargarDatosNube } from '../services/syncService';
+import { exportarBackup, importarBackup } from '../services/backupService';
+import { supabase } from '../services/supabaseClient';
 import COLORS from '../constants/colors';
+import { useSync } from '../context/SyncContext';
 
 export default function ConfigScreen() {
   const { db } = useDb();
+  const { actualizarConteo } = useSync();
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
@@ -24,19 +28,93 @@ export default function ConfigScreen() {
   const [productos, setProductos] = useState([]);
   const [turnoActivo, setTurnoActivo] = useState('Mañana');
   const [ultimoBackup, setUltimoBackup] = useState('Nunca');
-  const [exportando, setExportando] = useState(false);
+  const [isBackupLoading, setIsBackupLoading] = useState(false);
 
-  const handleExportarBackup = async () => {
-    setExportando(true);
+  const handleSyncNube = async () => {
+    if (!supabase) {
+      Alert.alert(
+        'Configuración Requerida',
+        'Por favor, configura primero la conexión a la nube (Supabase) en los ajustes generales para poder sincronizar.'
+      );
+      return;
+    }
+
+    setIsBackupLoading(true);
+    try {
+      // 1. Ejecutar subida de datos pendientes
+      const subidaStats = await subirDatosPendientes(db);
+
+      // 2. Ejecutar descarga/sincronización de datos nuevos de la nube
+      const descargaStats = await descargarDatosNube(db);
+
+      // 3. Registrar fecha y hora del último respaldo localmente
+      const nowStr = new Date().toLocaleString();
+      await db.runAsync(
+        "UPDATE app_config SET value = ? WHERE key = 'ultimo_backup';",
+        [nowStr]
+      );
+      setUltimoBackup(nowStr);
+
+      // 4. Recargar datos de la pantalla para mostrar cambios (ej: nuevos productos)
+      await loadData();
+      
+      // 5. Actualizar conteo global en el header
+      await actualizarConteo();
+
+      Alert.alert(
+        'Sincronización Completada',
+        `Respaldo e integración bidireccional exitosa.\n\n` +
+        `Subida (Nube):\n` +
+        `• ${subidaStats.productos} productos subidos.\n` +
+        `• ${subidaStats.ventas} ventas subidas.\n\n` +
+        `Descarga (Celular):\n` +
+        `• ${descargaStats.productos.creados + descargaStats.productos.actualizados} productos integrados (${descargaStats.productos.creados} nuevos, ${descargaStats.productos.actualizados} actualizados).\n` +
+        `• ${descargaStats.ventas.creados + descargaStats.ventas.actualizados} ventas integradas (${descargaStats.ventas.creados} nuevas, ${descargaStats.ventas.actualizados} actualizadas).`
+      );
+    } catch (error) {
+      console.error('[Config] Error al sincronizar con la nube:', error);
+      Alert.alert('Error de Sincronización', error.message || 'Ocurrió un error inesperado al conectar con Supabase.');
+    } finally {
+      setIsBackupLoading(false);
+    }
+  };
+
+  const handleExportarJSON = async () => {
+    setIsBackupLoading(true);
     try {
       const fecha = await exportarBackup(db);
-      setUltimoBackup(fecha);
-      Alert.alert('Respaldo exportado', `Respaldo guardado correctamente (${fecha}).`);
+      const nowStr = new Date().toLocaleString();
+      setUltimoBackup(nowStr);
+      Alert.alert('Copia de Seguridad Exportada', `El archivo de copia local se ha generado y compartido exitosamente (${fecha}).`);
     } catch (error) {
-      console.error('[Config] Error al exportar backup:', error);
-      Alert.alert('Error', 'No se pudo exportar el respaldo.');
+      console.error('[Config] Error al exportar JSON:', error);
+      Alert.alert('Error', 'No se pudo exportar el archivo de copia local.');
     } finally {
-      setExportando(false);
+      setIsBackupLoading(false);
+    }
+  };
+
+  const handleImportarJSON = async () => {
+    setIsBackupLoading(true);
+    try {
+      const res = await importarBackup(db);
+      if (res) {
+        setUltimoBackup(res.fecha);
+        await loadData();
+        await actualizarConteo();
+        Alert.alert(
+          'Restauración Exitosa',
+          `Se han integrado correctamente todos los registros:\n\n` +
+          `• Productos: ${res.productos}\n` +
+          `• Ventas: ${res.ventas}\n` +
+          `• Detalles de venta: ${res.detalles}`
+        );
+      }
+    } catch (error) {
+      console.error('[Config] Error al importar JSON:', error);
+      Alert.alert('Error de Restauración', error.message || 'No se pudo restaurar la base de datos a partir del archivo seleccionado.');
+    } finally {
+      setIsBackupLoading(false);
     }
   };
 
@@ -132,9 +210,11 @@ export default function ConfigScreen() {
     const isFirst = index === 0;
     const isLast = index === productos.length - 1;
     const displayPrice =
-      item.is_variable === 1
-        ? 'Precio variable'
-        : `S/ ${(item.precio_cents / 100).toFixed(2)}`;
+      item.is_custom === 1
+        ? 'Caso especial'
+        : item.is_variable === 1
+          ? 'Precio variable'
+          : `S/ ${(item.precio_cents / 100).toFixed(2)}`;
 
     return (
       <View style={styles.productRow}>
@@ -204,6 +284,7 @@ export default function ConfigScreen() {
             {/* SECCIÓN 2: AJUSTES GENERALES */}
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>Ajustes Generales</Text>
+              
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Turno activo:</Text>
                 <View style={styles.toggleContainer}>
@@ -244,6 +325,28 @@ export default function ConfigScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
+
+              <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+                <Text style={styles.settingLabel}>Medios de Pago (QR):</Text>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  activeOpacity={0.7}
+                  onPress={() => navigation.navigate('MediosPago')}
+                >
+                  <Text style={styles.actionBtnText}>Configurar →</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+                <Text style={styles.settingLabel}>Conexión Nube (Supabase):</Text>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  activeOpacity={0.7}
+                  onPress={() => navigation.navigate('SupabaseConfig')}
+                >
+                  <Text style={styles.actionBtnText}>Configurar →</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* SECCIÓN 1: CABECERA CATÁLOGO DE PRODUCTOS */}
@@ -261,23 +364,64 @@ export default function ConfigScreen() {
             >
               <Text style={styles.addButtonText}>+ Nuevo producto</Text>
             </TouchableOpacity>
-
             {/* SECCIÓN 3: RESPALDO MANUAL */}
             <View style={[styles.sectionCard, { marginTop: 24 }]}>
-              <Text style={styles.sectionTitle}>Respaldo</Text>
-              <Text style={styles.backupLog}>Último respaldo: {ultimoBackup}</Text>
-              <TouchableOpacity
-                style={[styles.backupBtn, { backgroundColor: '#3b82f6' }]}
-                disabled={exportando}
-                activeOpacity={0.7}
-                onPress={handleExportarBackup}
-              >
-                {exportando ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={[styles.backupBtnText, { color: '#fff' }]}>Exportar respaldo ahora</Text>
-                )}
-              </TouchableOpacity>
+              <Text style={styles.sectionTitle}>Copias de Seguridad</Text>
+              <Text style={styles.backupLog}>Último movimiento: {ultimoBackup}</Text>
+
+              {/* Opción A: Sincronización en la Nube */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.backupSubTitle}>Sincronización en la Nube (Online)</Text>
+                <Text style={styles.backupNoticeText}>
+                  Respalda y recupera tus ventas y catálogo al instante sincronizando de forma bidireccional con Supabase.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.primaryBackupBtn, isBackupLoading && styles.backupBtnDisabled]}
+                  disabled={isBackupLoading}
+                  activeOpacity={0.8}
+                  onPress={handleSyncNube}
+                >
+                  <Text style={styles.primaryBackupBtnText}>Sincronizar con la Nube</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Separador */}
+              <View style={{ borderTopWidth: 1, borderTopColor: COLORS.borde, marginVertical: 12 }} />
+
+              {/* Opción B: Copia Local JSON */}
+              <View>
+                <Text style={styles.backupSubTitle}>Respaldo Local Offline (JSON)</Text>
+                <Text style={styles.backupNoticeText}>
+                  Guarda o recupera un archivo de texto encriptado en el almacenamiento del dispositivo.
+                </Text>
+                <View style={styles.rowButtons}>
+                  <TouchableOpacity
+                    style={[styles.secondaryBackupBtn, { marginRight: 8 }, isBackupLoading && styles.backupBtnDisabled]}
+                    disabled={isBackupLoading}
+                    activeOpacity={0.8}
+                    onPress={handleExportarJSON}
+                  >
+                    <Text style={styles.secondaryBackupBtnText}>Exportar JSON</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.secondaryBackupBtn, isBackupLoading && styles.backupBtnDisabled]}
+                    disabled={isBackupLoading}
+                    activeOpacity={0.8}
+                    onPress={handleImportarJSON}
+                  >
+                    <Text style={styles.secondaryBackupBtnText}>Importar JSON</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Indicador de carga de respaldo global */}
+              {isBackupLoading && (
+                <View style={styles.overlayLoading}>
+                  <ActivityIndicator size="small" color="#059669" />
+                  <Text style={styles.overlayText}>Procesando copia de seguridad...</Text>
+                </View>
+              )}
             </View>
           </>
         }
@@ -457,22 +601,105 @@ const styles = StyleSheet.create({
     color: COLORS.textoSecundario,
     marginBottom: 12,
   },
-  backupBtn: {
+  backupSubTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: COLORS.textoPrimario,
+    marginBottom: 4,
+  },
+  backupNoticeText: {
+    fontSize: 12,
+    color: COLORS.textoSecundario,
+    marginBottom: 10,
+    lineHeight: 16,
+  },
+  primaryBackupBtn: {
     height: 44,
+    backgroundColor: '#3b82f6',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  primaryBackupBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  rowButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  secondaryBackupBtn: {
+    flex: 1,
+    height: 40,
     backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: COLORS.borde,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backupBtnText: {
-    color: '#9ca3af',
+  secondaryBackupBtnText: {
+    color: COLORS.textoPrimario,
     fontWeight: '600',
+    fontSize: 13,
   },
-  backupNotice: {
-    fontSize: 12,
-    color: '#9ca3af',
-    textAlign: 'center',
-    marginTop: 8,
-    fontStyle: 'italic',
+  backupBtnDisabled: {
+    opacity: 0.5,
+  },
+  overlayLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+    backgroundColor: '#ecfdf5',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  overlayText: {
+    marginLeft: 8,
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#065f46',
+  },
+  actionBtn: {
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  actionBtnText: {
+    color: '#1d4ed8',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: COLORS.textoSecundario,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  textInput: {
+    height: 40,
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: COLORS.borde,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    color: COLORS.textoPrimario,
+    fontSize: 14,
+    marginBottom: 10,
   },
 });

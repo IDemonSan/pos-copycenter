@@ -3,6 +3,7 @@ import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import { createSchema } from '../database/schema';
 import { runMigrations } from '../database/migrations';
 import { seedProductos } from '../database/seed';
+import { inicializarSupabase } from '../services/supabaseClient';
 
 const DbContext = createContext({
   db: null,
@@ -29,6 +30,9 @@ function DbProviderInner({ children }) {
   useEffect(() => {
     async function initializeDatabase() {
       try {
+        // 0. Inicializar Supabase dinámicamente desde SecureStore
+        await inicializarSupabase();
+
         // 1. Crear esquema si no existe
         await createSchema(db);
         

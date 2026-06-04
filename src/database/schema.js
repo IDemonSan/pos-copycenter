@@ -13,6 +13,7 @@ export async function createSchema(db) {
           nombre TEXT NOT NULL,
           precio_cents INTEGER NOT NULL,
           is_variable INTEGER DEFAULT 0,
+          is_custom INTEGER DEFAULT 0,
           orden_prioridad INTEGER DEFAULT 0,
           activo INTEGER DEFAULT 1,
           is_synced INTEGER DEFAULT 0,
@@ -46,17 +47,25 @@ export async function createSchema(db) {
           cantidad INTEGER NOT NULL,
           precio_unitario_cents INTEGER NOT NULL,
           subtotal_cents INTEGER NOT NULL,
+          detalle_multiplicador TEXT,
           FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE
       );
 
       CREATE INDEX IF NOT EXISTS idx_detalle_venta_id ON detalle_ventas(venta_id);
+
+      CREATE TABLE IF NOT EXISTS medios_pago (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          banco_nombre TEXT NOT NULL,
+          qr_image_path TEXT NOT NULL,
+          descripcion TEXT
+      );
 
       CREATE TABLE IF NOT EXISTS app_config (
           key TEXT PRIMARY KEY,
           value TEXT
       );
 
-      INSERT OR IGNORE INTO app_config (key, value) VALUES ('db_version', '1');
+      INSERT OR IGNORE INTO app_config (key, value) VALUES ('db_version', '4');
       INSERT OR IGNORE INTO app_config (key, value) VALUES ('turno_activo', 'Mañana');
       INSERT OR IGNORE INTO app_config (key, value) VALUES ('ultimo_backup', NULL);
 

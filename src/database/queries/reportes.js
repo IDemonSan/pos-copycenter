@@ -45,14 +45,17 @@ export async function getDeudaPorAula(db, mes) {
     return await db.getAllAsync(
       `SELECT
          aula,
-         turno,
+         CASE
+           WHEN aula LIKE '%C' THEN 'Tarde'
+           ELSE 'Mañana'
+         END AS turno,
          COALESCE(SUM(total_cents), 0) AS deuda_cents,
          COUNT(*) AS num_pedidos
        FROM ventas
        WHERE estado_pago = 0
          AND anulado_at IS NULL
          AND strftime('%Y-%m', fecha_venta) = ?
-       GROUP BY aula, turno
+       GROUP BY aula
        ORDER BY deuda_cents DESC;`,
       [mes]
     );

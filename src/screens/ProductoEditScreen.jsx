@@ -13,7 +13,16 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { insertarProducto, actualizarProducto } from '../database/queries/productos';
+import { recalcularPendientes } from '../services/syncWorker';
 import COLORS from '../constants/colors';
+
+const generateUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 export default function ProductoEditScreen() {
   const { db } = useDb();
@@ -26,6 +35,7 @@ export default function ProductoEditScreen() {
   const [nombre, setNombre] = useState('');
   const [precio, setPrecio] = useState('');
   const [isVariable, setIsVariable] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
   const [activo, setActivo] = useState(true);
 
   // Guardar el precio inicial para comparar y mostrar la advertencia
@@ -35,6 +45,7 @@ export default function ProductoEditScreen() {
     if (isEditing && producto) {
       setNombre(producto.nombre);
       setIsVariable(producto.is_variable === 1);
+      setIsCustom(producto.is_custom === 1);
       setActivo(producto.activo === 1);
       
       const soles = (producto.precio_cents / 100).toString();
@@ -55,9 +66,9 @@ export default function ProductoEditScreen() {
       return;
     }
 
-    // 2. Validar precio si no es variable
+    // 2. Validar precio si no es variable ni personalizado
     let priceCents = 0;
-    if (!isVariable) {
+    if (!isVariable && !isCustom) {
       const precioFloat = parseFloat(precio);
       if (isNaN(precioFloat) || precioFloat <= 0) {
         Alert.alert('Precio inválido', 'El precio debe ser un número mayor a 0.');
@@ -77,6 +88,7 @@ export default function ProductoEditScreen() {
           nombre: trimmedNombre,
           precio_cents: priceCents,
           is_variable: isVariable ? 1 : 0,
+          is_custom: isCustom ? 1 : 0,
           activo: activo ? 1 : 0,
         };
         await actualizarProducto(db, productoActualizado);
@@ -86,15 +98,20 @@ export default function ProductoEditScreen() {
         const maxOrdenActual = result?.maxOrden ?? 0;
 
         const nuevoProducto = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           nombre: trimmedNombre,
           precio_cents: priceCents,
           is_variable: isVariable ? 1 : 0,
+          is_custom: isCustom ? 1 : 0,
           orden_prioridad: maxOrdenActual + 1,
           activo: activo ? 1 : 0,
         };
         await insertarProducto(db, nuevoProducto);
       }
+      
+      // Recalcular contador de pendientes en tiempo real
+      await recalcularPendientes(db);
+
       navigation.goBack();
     } catch (err) {
       console.error('[ProductEdit] Error al guardar producto:', err);
@@ -128,7 +145,17 @@ export default function ProductoEditScreen() {
     );
   };
 
-  const showPriceWarning = isEditing && !isVariable && precio !== precioInicial && precio !== '';
+  const handleToggleVariable = (val) => {
+    setIsVariable(val);
+    if (val) setIsCustom(false);
+  };
+
+  const handleToggleCustom = (val) => {
+    setIsCustom(val);
+    if (val) setIsVariable(false);
+  };
+
+  const showPriceWarning = isEditing && !isVariable && !isCustom && precio !== precioInicial && precio !== '';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -144,17 +171,28 @@ export default function ProductoEditScreen() {
 
         {/* Switch precio variable */}
         <View style={styles.switchRow}>
-          <Text style={styles.settingLabel}>Precio variable</Text>
+          <Text style={styles.settingLabel}>Precio variable (solo precio editable)</Text>
           <Switch
             value={isVariable}
-            onValueChange={setIsVariable}
+            onValueChange={handleToggleVariable}
             trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
             thumbColor={isVariable ? '#3b82f6' : '#f3f4f6'}
           />
         </View>
 
-        {/* Campo precio (oculto si precio variable) */}
-        {!isVariable && (
+        {/* Switch personalizado / caso especial */}
+        <View style={styles.switchRow}>
+          <Text style={styles.settingLabel}>Caso Especial (Nombre y precio editables)</Text>
+          <Switch
+            value={isCustom}
+            onValueChange={handleToggleCustom}
+            trackColor={{ false: '#d1d5db', true: '#fbcfe8' }}
+            thumbColor={isCustom ? '#ec4899' : '#f3f4f6'}
+          />
+        </View>
+
+        {/* Campo precio (oculto si precio variable o caso especial) */}
+        {!isVariable && !isCustom && (
           <View style={styles.priceContainer}>
             <Text style={styles.label}>Precio (en soles) *</Text>
             <TextInput

@@ -1,35 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getPendientesCount, setSyncCallback } from '../services/syncWorker';
+import { useSync } from '../context/SyncContext';
+import { authErrorState } from '../services/supabaseClient';
 
 /**
- * Ícono indicador de sincronización en el header.
+ * Ícono indicador de sincronización en el header con soporte para Sincronización Rápida Global.
  */
 export default function SyncStatusIcon() {
-  const [pendientes, setPendientes] = useState(getPendientesCount());
+  const { pendientesCount, isSyncing, ejecutarSincronizacion } = useSync();
+  const [mostrarCheck, setMostrarCheck] = useState(false);
 
-  useEffect(() => {
-    // Suscribirse a actualizaciones del SyncWorker
-    setSyncCallback((count) => {
-      setPendientes(count);
-    });
-  }, []);
+  const handlePress = async () => {
+    if (isSyncing) return;
+    
+    await ejecutarSincronizacion();
 
-  const handlePress = () => {
-    if (pendientes === 0) {
-      Alert.alert('Sincronización', 'Todo está respaldado en la nube ✓');
-    } else {
-      Alert.alert(
-        'Sincronización',
-        `${pendientes} ${
-          pendientes === 1 ? 'registro pendiente' : 'registros pendientes'
-        } de respaldo. Se sincronizarán cuando haya WiFi.`
-      );
+    if (authErrorState !== 'credentials_error') {
+      setMostrarCheck(true);
+      setTimeout(() => {
+        setMostrarCheck(false);
+      }, 1500);
     }
   };
 
-  const isPending = pendientes > 0;
+  const isPending = pendientesCount > 0;
+  const hasAuthError = authErrorState === 'credentials_error';
+
+  if (isSyncing) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="small" color="#10b981" />
+      </View>
+    );
+  }
+
+  if (mostrarCheck) {
+    return (
+      <View style={styles.container}>
+        <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+      </View>
+    );
+  }
 
   return (
     <TouchableOpacity
@@ -38,14 +50,14 @@ export default function SyncStatusIcon() {
       onPress={handlePress}
     >
       <Ionicons
-        name={isPending ? 'cloud' : 'cloud-outline'}
+        name={hasAuthError ? 'cloud-offline' : (isPending ? 'cloud' : 'cloud-outline')}
         size={24}
-        color={isPending ? '#ea580c' : '#9ca3af'}
+        color={hasAuthError ? '#ef4444' : (isPending ? '#ea580c' : '#9ca3af')}
       />
-      {isPending && (
+      {isPending && !hasAuthError && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>
-            {pendientes > 99 ? '99+' : pendientes}
+            {pendientesCount > 99 ? '99+' : pendientesCount}
           </Text>
         </View>
       )}

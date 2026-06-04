@@ -1,5 +1,5 @@
 import NetInfo from '@react-native-community/netinfo';
-import { supabase } from './supabaseClient';
+import { supabase, asegurarAutenticacion } from './supabaseClient';
 import { sessionActiva } from './authService';
 import {
   getLoteProductosSinSync,
@@ -31,6 +31,25 @@ export function getPendientesCount() {
 }
 
 /**
+ * Recalcula de forma asíncrona la cantidad de registros pendientes de sincronización.
+ * @param {import('expo-sqlite').SQLiteDatabase} db
+ * @returns {Promise<number>}
+ */
+export async function recalcularPendientes(db) {
+  try {
+    if (db) {
+      const pendientes = await getPendientesSync(db);
+      pendientesCount = pendientes.productos + pendientes.ventas + pendientes.detalle_ventas;
+      onPendientesChange?.(pendientesCount);
+      return pendientesCount;
+    }
+  } catch (error) {
+    console.warn('[SyncWorker] Error al recalcular pendientes:', error);
+  }
+  return pendientesCount;
+}
+
+/**
  * Inicializa el monitor de conectividad a la red.
  * Ejecuta la sincronización en background automáticamente al detectar red WiFi y sesión activa.
  * @param {import('expo-sqlite').SQLiteDatabase} db
@@ -39,7 +58,7 @@ export function initSyncWorker(db) {
   // Listener de cambios de red
   NetInfo.addEventListener(async (state) => {
     const tieneWifi = state.isConnected && state.type === 'wifi';
-    if (tieneWifi && !syncEnCurso && sessionActiva) {
+    if (tieneWifi && !syncEnCurso) {
       await ejecutarSync(db);
     }
   });
@@ -62,7 +81,15 @@ export function initSyncWorker(db) {
  * Fuerza o ejecuta manualmente el ciclo de sincronización.
  */
 export async function ejecutarSync(db) {
-  if (!db || syncEnCurso || !sessionActiva) return;
+  if (!supabase || !db || syncEnCurso) return;
+
+  // Realizar inicio de sesión automático usando las credenciales guardadas antes de consultar/enviar datos
+  const isAuth = await asegurarAutenticacion();
+  if (!isAuth) {
+    console.warn('[SyncWorker] No se puede sincronizar: el cliente de Supabase no está autenticado.');
+    return;
+  }
+
   syncEnCurso = true;
 
   try {
@@ -96,9 +123,10 @@ async function sincronizarProductos(db) {
       break;
     }
 
+    const loteConSync = lote.map(r => ({ ...r, is_synced: 1 }));
     const { error } = await supabase
       .from('productos')
-      .upsert(lote, { onConflict: 'id' });
+      .upsert(loteConSync, { onConflict: 'id' });
 
     if (error) {
       console.warn('[SyncWorker] Error al subir productos:', error.message);
@@ -126,9 +154,10 @@ async function sincronizarVentasYDetalles(db) {
     }
 
     // A. Subir cabeceras de ventas
+    const ventasConSync = ventasLote.map(v => ({ ...v, is_synced: 1 }));
     const { error: ventasError } = await supabase
       .from('ventas')
-      .upsert(ventasLote, { onConflict: 'id' });
+      .upsert(ventasConSync, { onConflict: 'id' });
 
     if (ventasError) {
       console.warn('[SyncWorker] Error al subir ventas:', ventasError.message);

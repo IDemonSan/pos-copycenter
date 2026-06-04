@@ -6,6 +6,7 @@ import { DbProvider, useDb } from './src/context/DbContext';
 import { VentaProvider } from './src/context/VentaContext';
 import { AuthProvider, initSession } from './src/services/authService';
 import { initSyncWorker } from './src/services/syncWorker';
+import { SyncProvider } from './src/context/SyncContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 
@@ -63,7 +64,9 @@ export default function App() {
   return (
     <DbProvider>
       <AuthProvider>
-        <AppContent />
+        <SyncProvider>
+          <AppContent />
+        </SyncProvider>
       </AuthProvider>
     </DbProvider>
   );

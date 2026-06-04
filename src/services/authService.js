@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from './supabaseClient';
+import * as SecureStore from 'expo-secure-store';
+import { supabase, authErrorState, setAuthErrorState } from './supabaseClient';
+import { Alert } from 'react-native';
 
 const AuthContext = createContext({
   sessionActiva: false,
@@ -21,12 +23,20 @@ export let sessionActiva = false;
  * Re-autentica de forma asíncrona la cuenta admin fija en Supabase.
  */
 export async function reauthenticate() {
+  if (!supabase) {
+    sessionActiva = false;
+    return false;
+  }
+  if (authErrorState === 'credentials_error') {
+    sessionActiva = false;
+    return false;
+  }
   try {
-    const email = 'admin@negocio.com';
-    const password = process.env.EXPO_PUBLIC_APP_PASSWORD;
+    const email = await SecureStore.getItemAsync('supabase_user_email');
+    const password = await SecureStore.getItemAsync('supabase_user_password');
 
-    if (!password) {
-      console.warn('[Auth] EXPO_PUBLIC_APP_PASSWORD no está definida. Sincronización inactiva.');
+    if (!email || !password) {
+      console.warn('[Auth] Credenciales de autenticación incompletas en SecureStore. Sincronización inactiva.');
       sessionActiva = false;
       return false;
     }
@@ -39,14 +49,26 @@ export async function reauthenticate() {
     if (error) {
       console.warn('[Auth] Login fallido — modo offline completo:', error.message);
       sessionActiva = false;
+      if (error.status === 400 || error.message.includes("Invalid login credentials")) {
+        setAuthErrorState('credentials_error');
+        Alert.alert(
+          "Error de Conexión a la Nube",
+          "Las credenciales ingresadas no apuntan a ningún usuario válido en Supabase. Revisa el correo y la contraseña en Configuración.",
+          [{ text: "OK" }]
+        );
+      } else {
+        setAuthErrorState('network_error');
+      }
       return false;
     }
 
+    setAuthErrorState(null);
     sessionActiva = true;
     return true;
   } catch (e) {
     console.warn('[Auth] Error de red al autenticar:', e.message);
     sessionActiva = false;
+    setAuthErrorState('network_error');
     return false;
   }
 }
@@ -55,6 +77,10 @@ export async function reauthenticate() {
  * Inicializa la sesión de Supabase leyendo la persistencia inicial.
  */
 export async function initSession() {
+  if (!supabase) {
+    sessionActiva = false;
+    return;
+  }
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
@@ -96,6 +122,12 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    if (!supabase) {
+      setSessionActivaState(false);
+      sessionActiva = false;
+      return;
+    }
+
     // Sincronizar el estado de React con la suscripción de Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const active = !!session;

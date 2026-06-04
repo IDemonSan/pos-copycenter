@@ -35,9 +35,13 @@ export default function ProductButton({ producto, onPress, shakeSignal }) {
   }, [shakeSignal, translateX]);
 
   const displayPrice =
-    producto.is_variable === 1
-      ? 'Precio variable'
-      : `S/ ${(producto.precio_cents / 100).toFixed(2)}`;
+    producto.is_custom === 1
+      ? 'Caso especial'
+      : producto.is_variable === 1
+        ? 'Precio variable'
+        : `S/ ${(producto.precio_cents / 100).toFixed(2)}`;
+
+  const isSpecial = producto.is_variable === 1 || producto.is_custom === 1;
 
   return (
     <Animated.View style={{ transform: [{ translateX }] }}>
@@ -49,7 +53,7 @@ export default function ProductButton({ producto, onPress, shakeSignal }) {
         <Text style={styles.name} numberOfLines={2}>
           {producto.nombre}
         </Text>
-        <Text style={[styles.price, producto.is_variable === 1 && styles.variablePrice]}>
+        <Text style={[styles.price, isSpecial && styles.variablePrice]}>
           {displayPrice}
         </Text>
       </TouchableOpacity>

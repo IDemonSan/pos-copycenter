@@ -47,7 +47,7 @@ export default function AulaDetailScreen() {
   const handleGenerarPDF = async () => {
     setGenerandoPDF(true);
     try {
-      await generarPDFLiquidacion(db, { aula, turno, mes });
+      await generarPDFLiquidacion(db, { aula, turno, mes, navigation });
     } catch (error) {
       console.error('[AulaDetail] Error al generar PDF:', error);
       Alert.alert('Error', 'No se pudo generar el PDF. Intenta de nuevo.');
@@ -73,9 +73,9 @@ export default function AulaDetailScreen() {
       // 1. Obtener ventas activas del aula-turno del mes
       const sales = await db.getAllAsync(
         `SELECT * FROM ventas
-         WHERE aula = ? AND turno = ? AND strftime('%Y-%m', fecha_venta) = ? AND anulado_at IS NULL
+         WHERE aula = ? AND strftime('%Y-%m', fecha_venta) = ? AND anulado_at IS NULL
          ORDER BY fecha_venta DESC, fecha_registro DESC;`,
-        [aula, turno, mes]
+        [aula, mes]
       );
 
       // 2. Obtener detalles para cada venta
@@ -200,7 +200,6 @@ export default function AulaDetailScreen() {
 
   const renderVentaItem = ({ item }) => {
     const totalSoles = (item.total_cents / 100).toFixed(2);
-    const isBatchEntry = item.fecha_venta !== item.fecha_registro.slice(0, 10);
     
     // Detalle descriptivo de productos
     const productStr = item.detalles
@@ -216,11 +215,6 @@ export default function AulaDetailScreen() {
         <View style={styles.ventaHeader}>
           <Text style={styles.ventaDate}>{formatReadableDate(item.fecha_venta)}</Text>
           <View style={styles.badges}>
-            {isBatchEntry && (
-              <View style={[styles.badge, styles.badgeBatch]}>
-                <Text style={styles.badgeTextBatch}>Transcrito</Text>
-              </View>
-            )}
             <View
               style={[
                 styles.badge,

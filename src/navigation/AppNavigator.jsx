@@ -10,6 +10,8 @@ import SalonesScreen from '../screens/SalonesScreen';
 import AulaDetailScreen from '../screens/AulaDetailScreen';
 import ConfigScreen from '../screens/ConfigScreen';
 import ProductoEditScreen from '../screens/ProductoEditScreen';
+import MediosPagoScreen from '../screens/MediosPagoScreen';
+import SupabaseConfigScreen from '../screens/SupabaseConfigScreen';
 import SyncStatusIcon from '../components/SyncStatusIcon';
 import ReconnectBanner from '../components/ReconnectBanner';
 
@@ -76,6 +78,16 @@ function ConfigStack() {
         name="ProductoEdit"
         component={ProductoEditScreen}
         options={{ title: 'Editar Producto' }}
+      />
+      <Stack.Screen
+        name="MediosPago"
+        component={MediosPagoScreen}
+        options={{ title: 'Medios de Pago' }}
+      />
+      <Stack.Screen
+        name="SupabaseConfig"
+        component={SupabaseConfigScreen}
+        options={{ title: 'Conexión a la Nube' }}
       />
     </Stack.Navigator>
   );

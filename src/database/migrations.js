@@ -1,7 +1,7 @@
 /**
  * Versión actual del esquema en el código de la aplicación.
  */
-export const CODE_DB_VERSION = 1;
+export const CODE_DB_VERSION = 4;
 
 /**
  * Lista de migraciones ordenadas secuencialmente por versión.
@@ -9,18 +9,61 @@ export const CODE_DB_VERSION = 1;
  * @type {Array<{version: number, run: (db: import('expo-sqlite').SQLiteDatabase) => Promise<void>}>}
  */
 const MIGRATIONS = [
-  // Ejemplo de migración futura:
-  // {
-  //   version: 2,
-  //   run: async (db) => {
-  //     await db.execAsync(`
-  //       BEGIN TRANSACTION;
-  //       ALTER TABLE productos ADD COLUMN descuento_cents INTEGER DEFAULT 0;
-  //       UPDATE app_config SET value = '2' WHERE key = 'db_version';
-  //       COMMIT;
-  //     `);
-  //   }
-  // }
+  {
+    version: 2,
+    run: async (db) => {
+      await db.execAsync(`
+        BEGIN TRANSACTION;
+
+        ALTER TABLE detalle_ventas
+        ADD COLUMN detalle_multiplicador TEXT;
+
+        UPDATE app_config
+        SET value = '2'
+        WHERE key = 'db_version';
+
+        COMMIT;
+      `);
+    }
+  },
+  {
+    version: 3,
+    run: async (db) => {
+      await db.execAsync(`
+        BEGIN TRANSACTION;
+
+        CREATE TABLE IF NOT EXISTS medios_pago (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            banco_nombre TEXT NOT NULL,
+            qr_image_path TEXT NOT NULL,
+            descripcion TEXT
+        );
+
+        UPDATE app_config
+        SET value = '3'
+        WHERE key = 'db_version';
+
+        COMMIT;
+      `);
+    }
+  },
+  {
+    version: 4,
+    run: async (db) => {
+      await db.execAsync(`
+        BEGIN TRANSACTION;
+
+        ALTER TABLE productos
+        ADD COLUMN is_custom INTEGER DEFAULT 0;
+
+        UPDATE app_config
+        SET value = '4'
+        WHERE key = 'db_version';
+
+        COMMIT;
+      `);
+    }
+  }
 ];
 
 /**
@@ -29,6 +72,38 @@ const MIGRATIONS = [
  * @returns {Promise<void>}
  */
 export async function runMigrations(db) {
+  // --- AUTOCURACIÓN / VERIFICACIÓN DE SEGURIDAD ---
+  // Verifica y repara columnas/tablas que pudieron haber quedado inconsistentes
+  try {
+    // 1. Verificar columna detalle_multiplicador en detalle_ventas
+    const columnsDetalle = await db.getAllAsync("PRAGMA table_info(detalle_ventas);");
+    const hasMultiplicador = columnsDetalle.some(col => col.name === 'detalle_multiplicador');
+    if (!hasMultiplicador) {
+      await db.execAsync("ALTER TABLE detalle_ventas ADD COLUMN detalle_multiplicador TEXT;");
+      console.log("[DB Autocuración] Columna detalle_multiplicador añadida a detalle_ventas.");
+    }
+
+    // 2. Verificar columna is_custom en productos
+    const columnsProductos = await db.getAllAsync("PRAGMA table_info(productos);");
+    const hasIsCustom = columnsProductos.some(col => col.name === 'is_custom');
+    if (!hasIsCustom) {
+      await db.execAsync("ALTER TABLE productos ADD COLUMN is_custom INTEGER DEFAULT 0;");
+      console.log("[DB Autocuración] Columna is_custom añadida a productos.");
+    }
+
+    // 3. Verificar existencia de tabla medios_pago
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS medios_pago (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          banco_nombre TEXT NOT NULL,
+          qr_image_path TEXT NOT NULL,
+          descripcion TEXT
+      );
+    `);
+  } catch (e) {
+    console.error("[DB Autocuración] Error durante verificación estructural:", e);
+  }
+
   const result = await db.getFirstAsync(
     "SELECT value FROM app_config WHERE key = 'db_version';"
   );

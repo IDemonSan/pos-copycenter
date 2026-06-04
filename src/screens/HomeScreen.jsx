@@ -48,8 +48,16 @@ export default function HomeScreen() {
   const [pedidosCount, setPedidosCount] = useState(0);
   const [deudas, setDeudas] = useState([]);
 
-  const hoy = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
-  const mesActual = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  const obtenerFechaLocal = () => {
+    const d = new Date();
+    const anio = d.getFullYear();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
+  };
+
+  const hoy = obtenerFechaLocal();
+  const mesActual = hoy.slice(0, 7); // "YYYY-MM"
 
   const loadData = async () => {
     if (!db) return;
@@ -116,7 +124,7 @@ export default function HomeScreen() {
             <View style={styles.resumenCard}>
               <Text style={styles.resumenLabel}>Vendido hoy</Text>
               <Text style={styles.resumenAmount}>
-                S/ ${(resumenDia.total_dia_cents / 100).toFixed(2)}
+                S/ {(resumenDia.total_dia_cents / 100).toFixed(2)}
               </Text>
               <Text style={styles.resumenOrders}>
                 {pedidosCount} {pedidosCount === 1 ? 'pedido registrado' : 'pedidos registrados'}

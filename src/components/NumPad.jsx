@@ -1,162 +1,173 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
- * Teclado numérico estático y permanente para la pantalla de POS.
- * @param {Object} props
- * @param {(digit: string) => void} props.onDigit Callback al pulsar un dígito ("0"-"9" o "00")
- * @param {() => void} props.onBackspace Callback al pulsar borrar (⌫)
- * @param {() => void} props.onConfirmar Callback al pulsar confirmar venta
- * @param {boolean} props.confirmDisabled Si es verdadero, el botón confirmar se muestra deshabilitado (opacidad 0.4)
+ * NumPad — Teclado numérico estático del POS.
+ *
+ * Props:
+ *   onNumber:    (digit: string) => void
+ *   onX:         () => void        — activa modo multiplicación
+ *   onBackspace: () => void
+ *   onConfirmar: () => void
+ *   confirmDisabled: boolean       — si true, CONFIRMAR aparece opaco e inactivo
+ *   isModoMultiplicacion: boolean  — si true, el botón X se resalta
  */
-export default function NumPad({ onDigit, onBackspace, onConfirmar, confirmDisabled }) {
-  const row1 = ['7', '8', '9'];
-  const row2 = ['4', '5', '6'];
-  const row3 = ['1', '2', '3'];
+export default function NumPad({
+  onNumber,
+  onX,
+  onBackspace,
+  onConfirmar,
+  confirmDisabled = false,
+  isModoMultiplicacion = false,
+}) {
+  const insets = useSafeAreaInsets();
+
+  // Filas de la grilla numérica
+  const rows = [
+    ['1', '2', '3'],
+    ['4', '5', '6'],
+    ['7', '8', '9'],
+    ['X', '0', '⌫'],
+  ];
+
+  const handleKeyPress = (key) => {
+    if (key === 'X')  { onX(); return; }
+    if (key === '⌫') { onBackspace(); return; }
+    onNumber(key);
+  };
+
+  const getKeyStyle = (key) => {
+    if (key === '⌫') return [styles.key, styles.keyBackspace];
+    if (key === 'X')  return [styles.key, isModoMultiplicacion ? styles.keyXActivo : styles.keyX];
+    return styles.key;
+  };
+
+  const getKeyTextStyle = (key) => {
+    if (key === '⌫') return [styles.keyText, styles.keyBackspaceText];
+    if (key === 'X')  return [styles.keyText, isModoMultiplicacion ? styles.keyXTextoActivo : styles.keyXTexto];
+    return styles.keyText;
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Fila 1 */}
-      <View style={styles.row}>
-        {row1.map((num) => (
-          <TouchableOpacity
-            key={num}
-            style={styles.key}
-            activeOpacity={0.7}
-            onPress={() => onDigit(num)}
-          >
-            <Text style={styles.keyText}>{num}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+    // paddingBottom dinámico para NO quedar detrás de la barra de navegación inferior
+    <View style={[styles.container, { paddingBottom: insets.bottom + 8 }]}>
 
-      {/* Fila 2 (incluye retroceso) */}
-      <View style={styles.row}>
-        {row2.map((num) => (
-          <TouchableOpacity
-            key={num}
-            style={styles.key}
-            activeOpacity={0.7}
-            onPress={() => onDigit(num)}
-          >
-            <Text style={styles.keyText}>{num}</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity
-          style={[styles.key, styles.backspaceKey]}
-          activeOpacity={0.7}
-          onPress={onBackspace}
-        >
-          <Text style={styles.backspaceText}>⌫</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Grilla numérica 3×4 */}
+      {rows.map((row, rowIndex) => (
+        <View key={rowIndex} style={styles.row}>
+          {row.map((key) => (
+            <TouchableOpacity
+              key={key}
+              style={getKeyStyle(key)}
+              onPress={() => handleKeyPress(key)}
+              activeOpacity={0.7}
+            >
+              <Text style={getKeyTextStyle(key)}>{key}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ))}
 
-      {/* Fila 3 */}
-      <View style={styles.row}>
-        {row3.map((num) => (
-          <TouchableOpacity
-            key={num}
-            style={styles.key}
-            activeOpacity={0.7}
-            onPress={() => onDigit(num)}
-          >
-            <Text style={styles.keyText}>{num}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {/* Botón CONFIRMAR — ancho completo, separado de la grilla */}
+      <TouchableOpacity
+        style={[
+          styles.confirmKey,
+          confirmDisabled && styles.confirmKeyDisabled,
+        ]}
+        onPress={onConfirmar}
+        disabled={confirmDisabled}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.confirmText}>CONFIRMAR  ✔</Text>
+      </TouchableOpacity>
 
-      {/* Fila 4 (0, 00 y Confirmar) */}
-      <View style={styles.row}>
-        <TouchableOpacity
-          style={styles.key}
-          activeOpacity={0.7}
-          onPress={() => onDigit('0')}
-        >
-          <Text style={styles.keyText}>0</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.key}
-          activeOpacity={0.7}
-          onPress={() => onDigit('00')}
-        >
-          <Text style={styles.keyText}>00</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.confirmKey,
-            confirmDisabled ? styles.confirmDisabled : styles.confirmEnabled,
-          ]}
-          activeOpacity={confirmDisabled ? 1 : 0.7}
-          disabled={confirmDisabled}
-          onPress={onConfirmar}
-        >
-          <Text style={styles.confirmText}>CONFIRMAR VENTA</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    padding: 8,
-    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
   },
+
+  // ── Fila de teclas ───────────────────────────────────────────────────────
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
   },
+
+  // ── Tecla genérica ───────────────────────────────────────────────────────
   key: {
     flex: 1,
     height: 58,
-    minWidth: 58,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
   },
   keyText: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#111827',
   },
-  backspaceKey: {
+
+  // ── Tecla backspace (⌫) ──────────────────────────────────────────────────
+  keyBackspace: {
     backgroundColor: '#fee2e2',
-    borderColor: '#fca5a5',
   },
-  backspaceText: {
-    fontSize: 22,
-    fontWeight: 'bold',
+  keyBackspaceText: {
     color: '#dc2626',
+    fontSize: 20,
   },
+
+  // ── Tecla X (multiplicar) — inactiva ─────────────────────────────────────
+  keyX: {
+    backgroundColor: '#eff6ff',
+  },
+  keyXTexto: {
+    color: '#3b82f6',
+    fontWeight: '700',
+  },
+
+  // ── Tecla X (multiplicar) — activa ───────────────────────────────────────
+  keyXActivo: {
+    backgroundColor: '#3b82f6',
+  },
+  keyXTextoActivo: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+
+  // ── Botón CONFIRMAR ───────────────────────────────────────────────────────
   confirmKey: {
-    flex: 2,
-    height: 58,
+    width: '100%',
+    height: 54,
     borderRadius: 8,
+    marginTop: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 4,
-    borderWidth: 1,
-  },
-  confirmEnabled: {
     backgroundColor: '#22c55e',
-    borderColor: '#16a34a',
   },
-  confirmDisabled: {
-    backgroundColor: '#e5e7eb',
-    borderColor: '#d1d5db',
-    opacity: 0.4,
+  confirmKeyDisabled: {
+    backgroundColor: '#d1d5db',
   },
   confirmText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#ffffff',
+    letterSpacing: 0.5,
   },
 });
