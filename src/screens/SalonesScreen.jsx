@@ -8,12 +8,14 @@ import {
   Alert,
   TouchableOpacity,
   SafeAreaView,
+  Modal,
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { getDeudaPorAula } from '../database/queries/reportes';
 import { marcarComoPagado } from '../database/queries/ventas';
 import AulaCard from '../components/AulaCard';
+import SyncStatusIcon from '../components/SyncStatusIcon';
 import COLORS from '../constants/colors';
 
 const AULAS = [
@@ -40,17 +42,28 @@ export default function SalonesScreen() {
   const [alDia, setAlDia] = useState([]);
   const [alDiaExpanded, setAlDiaExpanded] = useState(false);
 
-  const mesActual = new Date().toISOString().slice(0, 7); // "YYYY-MM"
-  const anio = new Date().getFullYear();
-  const mesIndice = new Date().getMonth();
-  const nombreMes = `${MESES[mesIndice]} ${anio}`;
+  const [mesSeleccionado, setMesSeleccionado] = useState(() => {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    return `${año}-${mes}`;
+  });
+  const [showMonthModal, setShowMonthModal] = useState(false);
+
+  const getNombreMes = (mesString) => {
+    const [year, month] = mesString.split('-');
+    const ind = parseInt(month, 10) - 1;
+    return `${MESES[ind]} ${year}`;
+  };
+
+  const nombreMes = getNombreMes(mesSeleccionado);
 
   const loadData = async () => {
     if (!db) return;
     setLoading(true);
     try {
-      // 1. Obtener aulas con deuda del mes actual
-      const dataDeudas = await getDeudaPorAula(db, mesActual);
+      // 1. Obtener aulas con deuda del mes seleccionado
+      const dataDeudas = await getDeudaPorAula(db, mesSeleccionado);
       
       // Mapear deudas por aula para fácil acceso
       const deudasMap = new Map();
@@ -91,11 +104,50 @@ export default function SalonesScreen() {
     }
   };
 
+  const ultimosMeses = React.useMemo(() => {
+    const list = [];
+    const hoy = new Date();
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+      const año = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      list.push(`${año}-${mes}`);
+    }
+    return list;
+  }, []);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
+          <TouchableOpacity
+            onPress={() => setShowMonthModal(true)}
+            style={{
+              marginRight: 8,
+              backgroundColor: '#374151',
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold', marginRight: 4 }}>
+              {nombreMes}
+            </Text>
+            <Text style={{ color: '#9ca3af', fontSize: 10 }}>▼</Text>
+          </TouchableOpacity>
+          <SyncStatusIcon />
+        </View>
+      )
+    });
+  }, [navigation, nombreMes]);
+
   useEffect(() => {
     if (isFocused) {
       loadData();
     }
-  }, [isFocused, db]);
+  }, [isFocused, db, mesSeleccionado]);
 
   const handleMarcarPagado = (aula, turno, deudaCents) => {
     const monto = (deudaCents / 100).toFixed(2);
@@ -116,7 +168,7 @@ export default function SalonesScreen() {
                    AND strftime('%Y-%m', fecha_venta) = ?
                    AND estado_pago = 0
                    AND anulado_at IS NULL;`,
-                [aula, turno, mesActual]
+                [aula, turno, mesSeleccionado]
               );
               const ventaIds = sales.map(s => s.id);
               
@@ -135,7 +187,7 @@ export default function SalonesScreen() {
   };
 
   const handleVerDetalle = (aula, turno) => {
-    navigation.navigate('AulaDetail', { aula, turno, mes: mesActual });
+    navigation.navigate('AulaDetail', { aula, turno, mes: mesSeleccionado });
   };
 
   if (loading) {
@@ -151,10 +203,52 @@ export default function SalonesScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Salones — {nombreMes}</Text>
-        </View>
+        {/* Selector de Mes Modal */}
+        <Modal
+          visible={showMonthModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowMonthModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Seleccionar Mes</Text>
+              
+              {ultimosMeses.map((m) => {
+                const esSeleccionado = m === mesSeleccionado;
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={[
+                      styles.modalOption,
+                      esSeleccionado && styles.modalOptionSelected,
+                    ]}
+                    onPress={() => {
+                      setMesSeleccionado(m);
+                      setShowMonthModal(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.modalOptionText,
+                        esSeleccionado && styles.modalOptionTextSelected,
+                      ]}
+                    >
+                      {getNombreMes(m)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowMonthModal(false)}
+              >
+                <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {totalAulasRegistradas === 0 && alDia.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -223,21 +317,69 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    height: 56,
-    backgroundColor: '#1f2937',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: COLORS.textoPrimario,
+    marginBottom: 16,
+  },
+  modalOption: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 4,
+    backgroundColor: '#f3f4f6',
+  },
+  modalOptionSelected: {
+    backgroundColor: '#3b82f6',
+  },
+  modalOptionText: {
+    fontSize: 15,
+    color: COLORS.textoPrimario,
+    fontWeight: '500',
+  },
+  modalOptionTextSelected: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  modalCloseButton: {
+    marginTop: 16,
+    paddingVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.borde,
+  },
+  modalCloseButtonText: {
+    fontSize: 15,
+    color: COLORS.textoSecundario,
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,

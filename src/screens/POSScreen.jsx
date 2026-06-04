@@ -19,6 +19,7 @@ import { getProductosActivos } from '../database/queries/productos';
 import NumPad from '../components/NumPad';
 import ProductButton from '../components/ProductButton';
 import CartItem from '../components/CartItem';
+import SyncStatusIcon from '../components/SyncStatusIcon';
 
 const obtenerFechaLocal = () => {
   const hoy = new Date();
@@ -149,6 +150,47 @@ export default function POSScreen({ route, navigation }) {
       recargarTurno(db);
     }
   }, [isFocused, db]);
+
+  // Configurar header nativo de forma dinámica con el selector de turno
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
+          <View style={{
+            flexDirection: 'row',
+            backgroundColor: '#374151',
+            borderRadius: 8,
+            padding: 2,
+            marginRight: 8,
+          }}>
+            <TouchableOpacity
+              onPress={() => handleCambiarTurno('Mañana')}
+              style={{
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 6,
+                backgroundColor: turnoActivo === 'Mañana' ? '#3b82f6' : 'transparent',
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>AM</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleCambiarTurno('Tarde')}
+              style={{
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 6,
+                backgroundColor: turnoActivo === 'Tarde' ? '#3b82f6' : 'transparent',
+              }}
+            >
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>PM</Text>
+            </TouchableOpacity>
+          </View>
+          <SyncStatusIcon />
+        </View>
+      )
+    });
+  }, [navigation, turnoActivo, aulaSeleccionada]);
 
   const handleProductPress = async (producto) => {
     const result = await agregarAlCarrito(producto);
@@ -287,18 +329,6 @@ export default function POSScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Nueva Venta</Text>
-          <TouchableOpacity
-            style={styles.turnoBadge}
-            activeOpacity={0.7}
-            onPress={() => handleCambiarTurno(turnoActivo === 'Mañana' ? 'Tarde' : 'Mañana')}
-          >
-            <Text style={styles.turnoText}>Turno: {turnoActivo}</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* SELECTORS */}
         <View style={styles.selectors}>
           <View style={styles.pickerWrapper}>
@@ -534,30 +564,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-  },
-  header: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    backgroundColor: '#1f2937',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  turnoBadge: {
-    backgroundColor: '#374151',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  turnoText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
   },
   selectors: {
     height: 50,
