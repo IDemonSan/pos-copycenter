@@ -21,7 +21,7 @@ import ProductButton from '../components/ProductButton';
 import CartItem from '../components/CartItem';
 import SyncStatusIcon from '../components/SyncStatusIcon';
 import CustomText from '../components/CustomText';
-import { scaleFont, numColumns, productsSectionHeight } from '../utils/responsive';
+import { scaleFont, scaleLayout, numColumns, productsSectionHeight } from '../utils/responsive';
 
 const obtenerFechaLocal = () => {
   const hoy = new Date();
@@ -157,20 +157,20 @@ export default function POSScreen({ route, navigation }) {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: scaleLayout(16) }}>
           <View style={{
             flexDirection: 'row',
             backgroundColor: '#374151',
-            borderRadius: 8,
-            padding: 2,
-            marginRight: 8,
+            borderRadius: scaleLayout(8),
+            padding: scaleLayout(2),
+            marginRight: scaleLayout(8),
           }}>
             <TouchableOpacity
               onPress={() => handleCambiarTurno('Mañana')}
               style={{
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 6,
+                paddingHorizontal: scaleLayout(8),
+                paddingVertical: scaleLayout(4),
+                borderRadius: scaleLayout(6),
                 backgroundColor: turnoActivo === 'Mañana' ? '#3b82f6' : 'transparent',
               }}
             >
@@ -179,9 +179,9 @@ export default function POSScreen({ route, navigation }) {
             <TouchableOpacity
               onPress={() => handleCambiarTurno('Tarde')}
               style={{
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 6,
+                paddingHorizontal: scaleLayout(8),
+                paddingVertical: scaleLayout(4),
+                borderRadius: scaleLayout(6),
                 backgroundColor: turnoActivo === 'Tarde' ? '#3b82f6' : 'transparent',
               }}
             >
@@ -376,10 +376,10 @@ export default function POSScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* SECCIÓN INFERIOR (Módulo de Control unificado con límites máximos) */}
+        {/* SECCIÓN INFERIOR (Módulo de Control unificado ocupando el ancho completo de pantalla) */}
         <View style={styles.lowerSection}>
           
-          {/* TOTAL ROW (Antes era parte de la sección de carrito, ahora anclado al control del pie) */}
+          {/* TOTAL ROW */}
           <View style={styles.cartFooter}>
             <View style={styles.totalRow}>
               <CustomText style={styles.totalLabel}>TOTAL:</CustomText>
@@ -387,7 +387,7 @@ export default function POSScreen({ route, navigation }) {
             </View>
           </View>
 
-          {/* GRID DE PRODUCTOS - maxHeight estructural y altura/columnas dinámicas */}
+          {/* GRID DE PRODUCTOS - Ocupa todo el ancho, columnas y alto dinámico */}
           <View style={[styles.productsSection, { height: productsSectionHeight, maxHeight: productsSectionHeight }]}>
             <FlatList
               key={`products-list-${numColumns}`}
@@ -580,8 +580,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: scaleLayout(12),
+    paddingVertical: scaleLayout(8),
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
     backgroundColor: '#f9fafb',
@@ -591,14 +591,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   picker: {
-    height: 40,
+    height: scaleLayout(40),
     width: '100%',
   },
   dateSelector: {
     flex: 0.8,
     alignItems: 'flex-end',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: scaleLayout(8),
   },
   dateText: {
     fontSize: 14,
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   cartSection: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
+    paddingHorizontal: scaleLayout(16),
   },
   emptyCart: {
     flex: 1,
@@ -624,19 +624,17 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   cartListContent: {
-    paddingVertical: 8,
+    paddingVertical: scaleLayout(8),
   },
   lowerSection: {
     width: '100%',
-    maxWidth: 600,
-    alignSelf: 'center',
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
   },
   cartFooter: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: scaleLayout(10),
+    paddingHorizontal: scaleLayout(16),
     backgroundColor: '#fff',
   },
   totalRow: {
@@ -655,20 +653,18 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   productsSection: {
-    maxWidth: 600,
-    alignSelf: 'center',
     width: '100%',
     backgroundColor: '#f9fafb',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
-    padding: 4,
+    padding: scaleLayout(4),
   },
   productCol: {
-    padding: 2,
+    padding: scaleLayout(2),
   },
   bufferIndicador: {
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: scaleLayout(6),
     backgroundColor: '#f9fafb',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
@@ -682,7 +678,7 @@ const styles = StyleSheet.create({
   bufferHint: {
     fontSize: 11,
     color: '#6b7280',
-    marginTop: 2,
+    marginTop: scaleLayout(2),
   },
   numpadSection: {
     backgroundColor: '#fff',
@@ -696,35 +692,35 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    maxWidth: 400,
+    maxWidth: scaleLayout(400),
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: scaleLayout(12),
+    padding: scaleLayout(20),
     alignItems: 'center',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
-    marginBottom: 4,
+    marginBottom: scaleLayout(4),
   },
   modalSubtitle: {
     fontSize: 14,
     color: '#6b7280',
-    marginBottom: 16,
+    marginBottom: scaleLayout(16),
     textAlign: 'center',
   },
   priceInput: {
     width: '100%',
-    height: 48,
+    height: scaleLayout(48),
     borderWidth: 1,
     borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderRadius: scaleLayout(8),
+    paddingHorizontal: scaleLayout(12),
     fontSize: 18,
     textAlign: 'center',
     color: '#1f2937',
-    marginBottom: 20,
+    marginBottom: scaleLayout(20),
   },
   modalButtons: {
     flexDirection: 'row',
@@ -732,11 +728,11 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-    height: 44,
-    borderRadius: 8,
+    height: scaleLayout(44),
+    borderRadius: scaleLayout(8),
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 6,
+    marginHorizontal: scaleLayout(6),
   },
   modalCancelButton: {
     backgroundColor: '#f3f4f6',

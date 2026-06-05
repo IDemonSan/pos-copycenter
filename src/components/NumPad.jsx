@@ -102,9 +102,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
     width: '100%',
-    maxWidth: 400,
-    maxHeight: 320,
-    alignSelf: 'center',
   },
 
   // ── Fila de teclas ───────────────────────────────────────────────────────

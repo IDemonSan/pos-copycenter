@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import CustomText from './CustomText';
+import { productButtonHeight } from '../utils/responsive';
 
 /**
  * Botón para representar un producto en la grilla del POS con animación shake.
@@ -47,7 +48,7 @@ export default function ProductButton({ producto, onPress, shakeSignal }) {
   return (
     <Animated.View style={{ transform: [{ translateX }] }}>
       <TouchableOpacity
-        style={styles.button}
+        style={[styles.button, { height: productButtonHeight }]}
         activeOpacity={0.7}
         onPress={() => onPress(producto)}
       >
@@ -64,7 +65,6 @@ export default function ProductButton({ producto, onPress, shakeSignal }) {
 
 const styles = StyleSheet.create({
   button: {
-    height: 80,
     backgroundColor: '#f3f4f6',
     borderWidth: 1,
     borderColor: '#e5e7eb',
