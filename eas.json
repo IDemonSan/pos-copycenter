@@ -12,6 +12,9 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EAS_BUILD_ANDROID_SDK_ROOT": "/home/jk/Android/Sdk"
       }
     },
     "production": {

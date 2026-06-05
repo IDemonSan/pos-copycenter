@@ -38,3 +38,6 @@ ios/
 # Temporary
 *.tmp
 *.temp
+
+# Android APKs
+.apk
