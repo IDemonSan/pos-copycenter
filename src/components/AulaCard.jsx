@@ -1,5 +1,8 @@
+import CustomText from './CustomText';
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet, View, TouchableOpacity
+} from 'react-native';
 import COLORS from '../constants/colors';
 
 /**
@@ -19,26 +22,26 @@ export default function AulaCard({ aula, turno, deuda_cents, num_pedidos, onVerD
     <View style={styles.card}>
       {/* Fila Superior */}
       <View style={styles.topRow}>
-        <Text style={styles.aulaTitle}>{aula}</Text>
+        <CustomText style={styles.aulaTitle}>{aula}</CustomText>
         <View style={styles.turnoBadge}>
-          <Text style={styles.turnoText}>{turno}</Text>
+          <CustomText style={styles.turnoText}>{turno}</CustomText>
         </View>
       </View>
 
       {/* Fila Central */}
       <View style={styles.centerRow}>
         {deuda_cents > 0 ? (
-          <Text style={styles.deudaVal}>{formattedDeuda}</Text>
+          <CustomText style={styles.deudaVal}>{formattedDeuda}</CustomText>
         ) : (
-          <Text style={styles.pagadoVal}>Al día ✓</Text>
+          <CustomText style={styles.pagadoVal}>Al día ✓</CustomText>
         )}
       </View>
 
       {/* Fila Inferior */}
       <View style={styles.bottomRow}>
-        <Text style={styles.pedidosLabel}>
+        <CustomText style={styles.pedidosLabel}>
           {num_pedidos} {num_pedidos === 1 ? 'pedido pendiente' : 'pedidos pendientes'}
-        </Text>
+        </CustomText>
       </View>
 
       {/* Acciones */}
@@ -48,7 +51,7 @@ export default function AulaCard({ aula, turno, deuda_cents, num_pedidos, onVerD
           activeOpacity={0.7}
           onPress={onVerDetalle}
         >
-          <Text style={styles.detailButtonText}>Ver detalle</Text>
+          <CustomText style={styles.detailButtonText}>Ver detalle</CustomText>
         </TouchableOpacity>
 
         {deuda_cents > 0 && (
@@ -57,7 +60,7 @@ export default function AulaCard({ aula, turno, deuda_cents, num_pedidos, onVerD
             activeOpacity={0.7}
             onPress={onMarcarPagado}
           >
-            <Text style={styles.payButtonText}>Marcar como Pagado</Text>
+            <CustomText style={styles.payButtonText}>Marcar como Pagado</CustomText>
           </TouchableOpacity>
         )}
       </View>

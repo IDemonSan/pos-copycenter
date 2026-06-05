@@ -1,14 +1,14 @@
+import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   ScrollView,
-  SafeAreaView,
+  SafeAreaView
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
@@ -95,7 +95,7 @@ export default function SupabaseConfigScreen() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#3b82f6" />
-          <Text style={styles.loadingText}>Cargando credenciales...</Text>
+          <CustomText style={styles.loadingText}>Cargando credenciales...</CustomText>
         </View>
       </SafeAreaView>
     );
@@ -105,12 +105,12 @@ export default function SupabaseConfigScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
-          <Text style={styles.title}>Conexión con la Nube</Text>
-          <Text style={styles.subtitle}>
+          <CustomText style={styles.title}>Conexión con la Nube</CustomText>
+          <CustomText style={styles.subtitle}>
             Configura las credenciales de tu proyecto de Supabase para activar la sincronización y el respaldo automático de ventas en segundo plano.
-          </Text>
+          </CustomText>
 
-          <Text style={styles.label}>URL del Proyecto Supabase *</Text>
+          <CustomText style={styles.label}>URL del Proyecto Supabase *</CustomText>
           <TextInput
             style={styles.input}
             placeholder="https://xxxxxxxxxxxx.supabase.co"
@@ -120,7 +120,7 @@ export default function SupabaseConfigScreen() {
             autoCorrect={false}
           />
 
-          <Text style={[styles.label, { marginTop: 12 }]}>Anon Key de Supabase *</Text>
+          <CustomText style={[styles.label, { marginTop: 12 }]}>Anon Key de Supabase *</CustomText>
           <TextInput
             style={styles.input}
             placeholder="eyJxxxxxxxxxxxx..."
@@ -132,12 +132,12 @@ export default function SupabaseConfigScreen() {
           />
 
           <View style={{ marginVertical: 12, borderTopWidth: 1, borderTopColor: COLORS.borde, paddingTop: 16 }}>
-            <Text style={[styles.title, { fontSize: 16 }]}>Credenciales del Administrador</Text>
-            <Text style={[styles.subtitle, { marginBottom: 12 }]}>
+            <CustomText style={[styles.title, { fontSize: 16 }]}>Credenciales del Administrador</CustomText>
+            <CustomText style={[styles.subtitle, { marginBottom: 12 }]}>
               Ingresa el correo y la contraseña de la cuenta autorizada creada en Supabase Auth.
-            </Text>
+            </CustomText>
 
-            <Text style={styles.label}>Correo electrónico *</Text>
+            <CustomText style={styles.label}>Correo electrónico *</CustomText>
             <TextInput
               style={styles.input}
               placeholder="admin@negocio.com"
@@ -148,7 +148,7 @@ export default function SupabaseConfigScreen() {
               autoCorrect={false}
             />
 
-            <Text style={[styles.label, { marginTop: 12 }]}>Contraseña *</Text>
+            <CustomText style={[styles.label, { marginTop: 12 }]}>Contraseña *</CustomText>
             <TextInput
               style={styles.input}
               placeholder="••••••••"
@@ -169,7 +169,7 @@ export default function SupabaseConfigScreen() {
             {guardando ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.saveButtonText}>Guardar Conexión</Text>
+              <CustomText style={styles.saveButtonText}>Guardar Conexión</CustomText>
             )}
           </TouchableOpacity>
         </View>

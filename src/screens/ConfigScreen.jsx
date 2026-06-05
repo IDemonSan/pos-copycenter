@@ -1,13 +1,13 @@
+import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
+  SafeAreaView
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -226,7 +226,7 @@ export default function ConfigScreen() {
             activeOpacity={0.7}
             onPress={() => handleMoveUp(index)}
           >
-            <Text style={[styles.arrowText, isFirst && styles.arrowTextDisabled]}>↑</Text>
+            <CustomText style={[styles.arrowText, isFirst && styles.arrowTextDisabled]}>↑</CustomText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.arrowBtn, isLast && styles.arrowBtnDisabled]}
@@ -234,20 +234,20 @@ export default function ConfigScreen() {
             activeOpacity={0.7}
             onPress={() => handleMoveDown(index)}
           >
-            <Text style={[styles.arrowText, isLast && styles.arrowTextDisabled]}>↓</Text>
+            <CustomText style={[styles.arrowText, isLast && styles.arrowTextDisabled]}>↓</CustomText>
           </TouchableOpacity>
         </View>
 
         {/* Info */}
         <View style={styles.productInfo}>
-          <Text style={styles.productName}>{item.nombre}</Text>
+          <CustomText style={styles.productName}>{item.nombre}</CustomText>
           <View style={styles.productSubRow}>
-            <Text style={styles.productPrice}>{displayPrice}</Text>
-            <Text style={styles.bullet}>•</Text>
+            <CustomText style={styles.productPrice}>{displayPrice}</CustomText>
+            <CustomText style={styles.bullet}>•</CustomText>
             {item.activo === 1 ? (
-              <Text style={[styles.statusText, styles.statusActive]}>Activo ●</Text>
+              <CustomText style={[styles.statusText, styles.statusActive]}>Activo ●</CustomText>
             ) : (
-              <Text style={[styles.statusText, styles.statusInactive]}>Inactivo ○</Text>
+              <CustomText style={[styles.statusText, styles.statusInactive]}>Inactivo ○</CustomText>
             )}
           </View>
         </View>
@@ -258,7 +258,7 @@ export default function ConfigScreen() {
           activeOpacity={0.7}
           onPress={() => navigation.navigate('ProductoEdit', { producto: item })}
         >
-          <Text style={styles.editIcon}>✏️</Text>
+          <CustomText style={styles.editIcon}>✏️</CustomText>
         </TouchableOpacity>
       </View>
     );
@@ -283,10 +283,10 @@ export default function ConfigScreen() {
           <>
             {/* SECCIÓN 2: AJUSTES GENERALES */}
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Ajustes Generales</Text>
+              <CustomText style={styles.sectionTitle}>Ajustes Generales</CustomText>
               
               <View style={styles.settingRow}>
-                <Text style={styles.settingLabel}>Turno activo:</Text>
+                <CustomText style={styles.settingLabel}>Turno activo:</CustomText>
                 <View style={styles.toggleContainer}>
                   <TouchableOpacity
                     style={[
@@ -296,14 +296,14 @@ export default function ConfigScreen() {
                     activeOpacity={0.7}
                     onPress={() => handleToggleTurno('Mañana')}
                   >
-                    <Text
+                    <CustomText
                       style={[
                         styles.toggleText,
                         turnoActivo === 'Mañana' && styles.toggleTextActive,
                       ]}
                     >
                       Mañana
-                    </Text>
+                    </CustomText>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -314,44 +314,44 @@ export default function ConfigScreen() {
                     activeOpacity={0.7}
                     onPress={() => handleToggleTurno('Tarde')}
                   >
-                    <Text
+                    <CustomText
                       style={[
                         styles.toggleText,
                         turnoActivo === 'Tarde' && styles.toggleTextActive,
                       ]}
                     >
                       Tarde
-                    </Text>
+                    </CustomText>
                   </TouchableOpacity>
                 </View>
               </View>
 
               <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
-                <Text style={styles.settingLabel}>Medios de Pago (QR):</Text>
+                <CustomText style={styles.settingLabel}>Medios de Pago (QR):</CustomText>
                 <TouchableOpacity
                   style={styles.actionBtn}
                   activeOpacity={0.7}
                   onPress={() => navigation.navigate('MediosPago')}
                 >
-                  <Text style={styles.actionBtnText}>Configurar →</Text>
+                  <CustomText style={styles.actionBtnText}>Configurar →</CustomText>
                 </TouchableOpacity>
               </View>
 
               <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
-                <Text style={styles.settingLabel}>Conexión Nube (Supabase):</Text>
+                <CustomText style={styles.settingLabel}>Conexión Nube (Supabase):</CustomText>
                 <TouchableOpacity
                   style={styles.actionBtn}
                   activeOpacity={0.7}
                   onPress={() => navigation.navigate('SupabaseConfig')}
                 >
-                  <Text style={styles.actionBtnText}>Configurar →</Text>
+                  <CustomText style={styles.actionBtnText}>Configurar →</CustomText>
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* SECCIÓN 1: CABECERA CATÁLOGO DE PRODUCTOS */}
             <View style={[styles.sectionTitleContainer, { marginTop: 16 }]}>
-              <Text style={styles.sectionTitle}>Catálogo de Productos</Text>
+              <CustomText style={styles.sectionTitle}>Catálogo de Productos</CustomText>
             </View>
           </>
         }
@@ -362,26 +362,26 @@ export default function ConfigScreen() {
               activeOpacity={0.7}
               onPress={() => navigation.navigate('ProductoEdit')}
             >
-              <Text style={styles.addButtonText}>+ Nuevo producto</Text>
+              <CustomText style={styles.addButtonText}>+ Nuevo producto</CustomText>
             </TouchableOpacity>
             {/* SECCIÓN 3: RESPALDO MANUAL */}
             <View style={[styles.sectionCard, { marginTop: 24 }]}>
-              <Text style={styles.sectionTitle}>Copias de Seguridad</Text>
-              <Text style={styles.backupLog}>Último movimiento: {ultimoBackup}</Text>
+              <CustomText style={styles.sectionTitle}>Copias de Seguridad</CustomText>
+              <CustomText style={styles.backupLog}>Último movimiento: {ultimoBackup}</CustomText>
 
               {/* Opción A: Sincronización en la Nube */}
               <View style={{ marginBottom: 16 }}>
-                <Text style={styles.backupSubTitle}>Sincronización en la Nube (Online)</Text>
-                <Text style={styles.backupNoticeText}>
+                <CustomText style={styles.backupSubTitle}>Sincronización en la Nube (Online)</CustomText>
+                <CustomText style={styles.backupNoticeText}>
                   Respalda y recupera tus ventas y catálogo al instante sincronizando de forma bidireccional con Supabase.
-                </Text>
+                </CustomText>
                 <TouchableOpacity
                   style={[styles.primaryBackupBtn, isBackupLoading && styles.backupBtnDisabled]}
                   disabled={isBackupLoading}
                   activeOpacity={0.8}
                   onPress={handleSyncNube}
                 >
-                  <Text style={styles.primaryBackupBtnText}>Sincronizar con la Nube</Text>
+                  <CustomText style={styles.primaryBackupBtnText}>Sincronizar con la Nube</CustomText>
                 </TouchableOpacity>
               </View>
 
@@ -390,10 +390,10 @@ export default function ConfigScreen() {
 
               {/* Opción B: Copia Local JSON */}
               <View>
-                <Text style={styles.backupSubTitle}>Respaldo Local Offline (JSON)</Text>
-                <Text style={styles.backupNoticeText}>
+                <CustomText style={styles.backupSubTitle}>Respaldo Local Offline (JSON)</CustomText>
+                <CustomText style={styles.backupNoticeText}>
                   Guarda o recupera un archivo de texto encriptado en el almacenamiento del dispositivo.
-                </Text>
+                </CustomText>
                 <View style={styles.rowButtons}>
                   <TouchableOpacity
                     style={[styles.secondaryBackupBtn, { marginRight: 8 }, isBackupLoading && styles.backupBtnDisabled]}
@@ -401,7 +401,7 @@ export default function ConfigScreen() {
                     activeOpacity={0.8}
                     onPress={handleExportarJSON}
                   >
-                    <Text style={styles.secondaryBackupBtnText}>Exportar JSON</Text>
+                    <CustomText style={styles.secondaryBackupBtnText}>Exportar JSON</CustomText>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -410,7 +410,7 @@ export default function ConfigScreen() {
                     activeOpacity={0.8}
                     onPress={handleImportarJSON}
                   >
-                    <Text style={styles.secondaryBackupBtnText}>Importar JSON</Text>
+                    <CustomText style={styles.secondaryBackupBtnText}>Importar JSON</CustomText>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -419,7 +419,7 @@ export default function ConfigScreen() {
               {isBackupLoading && (
                 <View style={styles.overlayLoading}>
                   <ActivityIndicator size="small" color="#059669" />
-                  <Text style={styles.overlayText}>Procesando copia de seguridad...</Text>
+                  <CustomText style={styles.overlayText}>Procesando copia de seguridad...</CustomText>
                 </View>
               )}
             </View>

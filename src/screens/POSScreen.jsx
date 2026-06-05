@@ -21,7 +21,7 @@ import ProductButton from '../components/ProductButton';
 import CartItem from '../components/CartItem';
 import SyncStatusIcon from '../components/SyncStatusIcon';
 import CustomText from '../components/CustomText';
-import { scaleFont, scaleLayout, numColumns, productsSectionHeight } from '../utils/responsive';
+import { scaleFont, scaleLayout, numColumns, deviceType } from '../utils/responsive';
 
 const obtenerFechaLocal = () => {
   const hoy = new Date();
@@ -328,6 +328,19 @@ export default function POSScreen({ route, navigation }) {
   const totalSoles = (totalCarritoCents / 100).toFixed(2);
   const isToday = fechaVenta === obtenerFechaLocal();
 
+  const getDynamicProductsSectionHeight = (count) => {
+    if (deviceType === 'phone') {
+      return 65; // Always 1 row on phone
+    }
+    if (deviceType === 'mediumTablet') {
+      return count <= 4 ? 110 : 190; // 1 or 2 rows
+    }
+    // Large tablet: Min 2 rows, Max 3 rows.
+    return count <= 10 ? 230 : 340;
+  };
+
+  const dynamicProductsHeight = getDynamicProductsSectionHeight(productos.length);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -388,7 +401,7 @@ export default function POSScreen({ route, navigation }) {
           </View>
 
           {/* GRID DE PRODUCTOS - Ocupa todo el ancho, columnas y alto dinámico */}
-          <View style={[styles.productsSection, { height: productsSectionHeight, maxHeight: productsSectionHeight }]}>
+          <View style={[styles.productsSection, { height: dynamicProductsHeight, maxHeight: dynamicProductsHeight }]}>
             <FlatList
               key={`products-list-${numColumns}`}
               data={productos}

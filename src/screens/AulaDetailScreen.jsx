@@ -1,13 +1,13 @@
+import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
+  SafeAreaView
 } from 'react-native';
 import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -213,7 +213,7 @@ export default function AulaDetailScreen() {
         onLongPress={() => handleVentaLongPress(item)}
       >
         <View style={styles.ventaHeader}>
-          <Text style={styles.ventaDate}>{formatReadableDate(item.fecha_venta)}</Text>
+          <CustomText style={styles.ventaDate}>{formatReadableDate(item.fecha_venta)}</CustomText>
           <View style={styles.badges}>
             <View
               style={[
@@ -221,22 +221,22 @@ export default function AulaDetailScreen() {
                 item.estado_pago === 1 ? styles.badgePaid : styles.badgeUnpaid,
               ]}
             >
-              <Text
+              <CustomText
                 style={
                   item.estado_pago === 1 ? styles.badgeTextPaid : styles.badgeTextUnpaid
                 }
               >
                 {item.estado_pago === 1 ? 'Pagado' : 'Pendiente'}
-              </Text>
+              </CustomText>
             </View>
           </View>
         </View>
 
-        <Text style={styles.ventaProducts} numberOfLines={2}>
+        <CustomText style={styles.ventaProducts} numberOfLines={2}>
           {productStr || 'Sin productos'}
-        </Text>
+        </CustomText>
 
-        <Text style={styles.ventaTotal}>Total: S/ {totalSoles}</Text>
+        <CustomText style={styles.ventaTotal}>Total: S/ {totalSoles}</CustomText>
       </TouchableOpacity>
     );
   };
@@ -256,15 +256,15 @@ export default function AulaDetailScreen() {
       <View style={styles.container}>
         {/* Header info */}
         <View style={styles.infoBlock}>
-          <Text style={styles.titleText}>{aula} — Turno {turno}</Text>
-          <Text style={styles.subtitleText}>
-            {formatMesTitle()} — Deuda: <Text style={styles.deudaRed}>S/ {(deudaTotalCents / 100).toFixed(2)}</Text>
-          </Text>
+          <CustomText style={styles.titleText}>{aula} — Turno {turno}</CustomText>
+          <CustomText style={styles.subtitleText}>
+            {formatMesTitle()} — Deuda: <CustomText style={styles.deudaRed}>S/ {(deudaTotalCents / 100).toFixed(2)}</CustomText>
+          </CustomText>
         </View>
 
         {ventas.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No hay ventas registradas para este salón en este mes.</Text>
+            <CustomText style={styles.emptyText}>No hay ventas registradas para este salón en este mes.</CustomText>
           </View>
         ) : (
           <FlatList
@@ -285,7 +285,7 @@ export default function AulaDetailScreen() {
           {generandoPDF ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.pdfButtonText}>Generar PDF del mes</Text>
+            <CustomText style={styles.pdfButtonText}>Generar PDF del mes</CustomText>
           )}
         </TouchableOpacity>
 
@@ -296,7 +296,7 @@ export default function AulaDetailScreen() {
             activeOpacity={0.8}
             onPress={handleMarcarTodoPagado}
           >
-            <Text style={styles.fabText}>✓ Pagar todo</Text>
+            <CustomText style={styles.fabText}>✓ Pagar todo</CustomText>
           </TouchableOpacity>
         )}
       </View>

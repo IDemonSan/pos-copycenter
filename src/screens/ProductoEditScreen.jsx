@@ -1,14 +1,14 @@
+import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   TextInput,
   Switch,
   TouchableOpacity,
   Alert,
   ScrollView,
-  SafeAreaView,
+  SafeAreaView
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -160,7 +160,7 @@ export default function ProductoEditScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.label}>Nombre del producto *</Text>
+        <CustomText style={styles.label}>Nombre del producto *</CustomText>
         <TextInput
           style={styles.input}
           placeholder="Ej: Copia B/N Anillado"
@@ -171,7 +171,7 @@ export default function ProductoEditScreen() {
 
         {/* Switch precio variable */}
         <View style={styles.switchRow}>
-          <Text style={styles.settingLabel}>Precio variable (solo precio editable)</Text>
+          <CustomText style={styles.settingLabel}>Precio variable (solo precio editable)</CustomText>
           <Switch
             value={isVariable}
             onValueChange={handleToggleVariable}
@@ -182,7 +182,7 @@ export default function ProductoEditScreen() {
 
         {/* Switch personalizado / caso especial */}
         <View style={styles.switchRow}>
-          <Text style={styles.settingLabel}>Caso Especial (Nombre y precio editables)</Text>
+          <CustomText style={styles.settingLabel}>Caso Especial (Nombre y precio editables)</CustomText>
           <Switch
             value={isCustom}
             onValueChange={handleToggleCustom}
@@ -194,7 +194,7 @@ export default function ProductoEditScreen() {
         {/* Campo precio (oculto si precio variable o caso especial) */}
         {!isVariable && !isCustom && (
           <View style={styles.priceContainer}>
-            <Text style={styles.label}>Precio (en soles) *</Text>
+            <CustomText style={styles.label}>Precio (en soles) *</CustomText>
             <TextInput
               style={styles.input}
               placeholder="0.00"
@@ -203,16 +203,16 @@ export default function ProductoEditScreen() {
               onChangeText={setPrecio}
             />
             {showPriceWarning && (
-              <Text style={styles.warningText}>
+              <CustomText style={styles.warningText}>
                 ℹ️ Las ventas registradas anteriormente mantienen el precio original.
-              </Text>
+              </CustomText>
             )}
           </View>
         )}
 
         {/* Switch activo */}
         <View style={styles.switchRow}>
-          <Text style={styles.settingLabel}>Activo en POS</Text>
+          <CustomText style={styles.settingLabel}>Activo en POS</CustomText>
           <Switch
             value={activo}
             onValueChange={setActivo}
@@ -227,7 +227,7 @@ export default function ProductoEditScreen() {
           activeOpacity={0.8}
           onPress={handleSave}
         >
-          <Text style={styles.saveButtonText}>Guardar Producto</Text>
+          <CustomText style={styles.saveButtonText}>Guardar Producto</CustomText>
         </TouchableOpacity>
 
         {isEditing && (
@@ -236,7 +236,7 @@ export default function ProductoEditScreen() {
             activeOpacity={0.8}
             onPress={handleDesactivar}
           >
-            <Text style={styles.deleteButtonText}>Desactivar Producto</Text>
+            <CustomText style={styles.deleteButtonText}>Desactivar Producto</CustomText>
           </TouchableOpacity>
         )}
       </ScrollView>

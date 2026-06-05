@@ -1,12 +1,12 @@
+import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  SafeAreaView,
+  SafeAreaView
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -107,42 +107,42 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Saludo y Fecha */}
         <View style={styles.greetingHeader}>
-          <Text style={styles.greetingText}>{getGreeting()},</Text>
-          <Text style={styles.dateText}>{formatLongDate()}</Text>
+          <CustomText style={styles.greetingText}>{getGreeting()},</CustomText>
+          <CustomText style={styles.dateText}>{formatLongDate()}</CustomText>
         </View>
 
         {!hasSalesOrDebts ? (
           <View style={styles.welcomeCard}>
-            <Text style={styles.welcomeTitle}>¡Bienvenida! 👋</Text>
-            <Text style={styles.welcomeText}>
+            <CustomText style={styles.welcomeTitle}>¡Bienvenida! 👋</CustomText>
+            <CustomText style={styles.welcomeText}>
               Toca 'Nueva Venta' para registrar tu primer pedido.
-            </Text>
+            </CustomText>
           </View>
         ) : (
           <>
             {/* TARJETA RESUMEN DEL DÍA */}
             <View style={styles.resumenCard}>
-              <Text style={styles.resumenLabel}>Vendido hoy</Text>
-              <Text style={styles.resumenAmount}>
+              <CustomText style={styles.resumenLabel}>Vendido hoy</CustomText>
+              <CustomText style={styles.resumenAmount}>
                 S/ {(resumenDia.total_dia_cents / 100).toFixed(2)}
-              </Text>
-              <Text style={styles.resumenOrders}>
+              </CustomText>
+              <CustomText style={styles.resumenOrders}>
                 {pedidosCount} {pedidosCount === 1 ? 'pedido registrado' : 'pedidos registrados'}
-              </Text>
+              </CustomText>
             </View>
 
             {/* SECCIÓN AULAS CON DEUDA */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>AULAS CON DEUDA</Text>
+              <CustomText style={styles.sectionTitle}>AULAS CON DEUDA</CustomText>
               <TouchableOpacity
                 onPress={() => navigation.navigate('Salones')}
               >
-                <Text style={styles.viewAllText}>Ver todas →</Text>
+                <CustomText style={styles.viewAllText}>Ver todas →</CustomText>
               </TouchableOpacity>
             </View>
 
             {deudas.length === 0 ? (
-              <Text style={styles.noDebtsText}>Todas las aulas están al día ✓</Text>
+              <CustomText style={styles.noDebtsText}>Todas las aulas están al día ✓</CustomText>
             ) : (
               deudas.map((item) => {
                 const totalSoles = (item.deuda_cents / 100).toFixed(2);
@@ -152,12 +152,12 @@ export default function HomeScreen() {
                     style={styles.compactCard}
                   >
                     <View style={styles.compactCardLeft}>
-                      <Text style={styles.compactAula}>{item.aula}</Text>
-                      <Text style={styles.compactTurno}>Turno: {item.turno}</Text>
+                      <CustomText style={styles.compactAula}>{item.aula}</CustomText>
+                      <CustomText style={styles.compactTurno}>Turno: {item.turno}</CustomText>
                     </View>
                     
                     <View style={styles.compactCardRight}>
-                      <Text style={styles.compactAmount}>S/ {totalSoles}</Text>
+                      <CustomText style={styles.compactAmount}>S/ {totalSoles}</CustomText>
                       <TouchableOpacity
                         style={styles.compactButton}
                         activeOpacity={0.7}
@@ -169,7 +169,7 @@ export default function HomeScreen() {
                           })
                         }
                       >
-                        <Text style={styles.compactButtonText}>Ver</Text>
+                        <CustomText style={styles.compactButtonText}>Ver</CustomText>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -185,7 +185,7 @@ export default function HomeScreen() {
           activeOpacity={0.8}
           onPress={() => navigation.navigate('POS')}
         >
-          <Text style={styles.nuevaVentaText}>+ NUEVA VENTA</Text>
+          <CustomText style={styles.nuevaVentaText}>+ NUEVA VENTA</CustomText>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

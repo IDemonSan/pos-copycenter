@@ -1,14 +1,14 @@
+import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   FlatList,
   ActivityIndicator,
   Alert,
   TouchableOpacity,
   SafeAreaView,
-  Modal,
+  Modal
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -132,10 +132,10 @@ export default function SalonesScreen() {
               alignItems: 'center',
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold', marginRight: 4 }}>
+            <CustomText style={{ color: '#fff', fontSize: 13, fontWeight: 'bold', marginRight: 4 }}>
               {nombreMes}
-            </Text>
-            <Text style={{ color: '#9ca3af', fontSize: 10 }}>▼</Text>
+            </CustomText>
+            <CustomText style={{ color: '#9ca3af', fontSize: 10 }}>▼</CustomText>
           </TouchableOpacity>
           <SyncStatusIcon />
         </View>
@@ -212,7 +212,7 @@ export default function SalonesScreen() {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Seleccionar Mes</Text>
+              <CustomText style={styles.modalTitle}>Seleccionar Mes</CustomText>
               
               {ultimosMeses.map((m) => {
                 const esSeleccionado = m === mesSeleccionado;
@@ -228,14 +228,14 @@ export default function SalonesScreen() {
                       setShowMonthModal(false);
                     }}
                   >
-                    <Text
+                    <CustomText
                       style={[
                         styles.modalOptionText,
                         esSeleccionado && styles.modalOptionTextSelected,
                       ]}
                     >
                       {getNombreMes(m)}
-                    </Text>
+                    </CustomText>
                   </TouchableOpacity>
                 );
               })}
@@ -244,7 +244,7 @@ export default function SalonesScreen() {
                 style={styles.modalCloseButton}
                 onPress={() => setShowMonthModal(false)}
               >
-                <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+                <CustomText style={styles.modalCloseButtonText}>Cancelar</CustomText>
               </TouchableOpacity>
             </View>
           </View>
@@ -252,7 +252,7 @@ export default function SalonesScreen() {
 
         {totalAulasRegistradas === 0 && alDia.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Aún no hay ventas este mes. Ve al POS para registrar.</Text>
+            <CustomText style={styles.emptyText}>Aún no hay ventas este mes. Ve al POS para registrar.</CustomText>
           </View>
         ) : (
           <FlatList
@@ -271,7 +271,7 @@ export default function SalonesScreen() {
             contentContainerStyle={styles.listContainer}
             ListHeaderComponent={
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Aulas con Deuda ({conDeuda.length})</Text>
+                <CustomText style={styles.sectionTitle}>Aulas con Deuda ({conDeuda.length})</CustomText>
               </View>
             }
             ListFooterComponent={
@@ -281,8 +281,8 @@ export default function SalonesScreen() {
                   activeOpacity={0.7}
                   onPress={() => setAlDiaExpanded(!alDiaExpanded)}
                 >
-                  <Text style={styles.sectionTitle}>Al día ({alDia.length})</Text>
-                  <Text style={styles.collapseIcon}>{alDiaExpanded ? '▲' : '▼'}</Text>
+                  <CustomText style={styles.sectionTitle}>Al día ({alDia.length})</CustomText>
+                  <CustomText style={styles.collapseIcon}>{alDiaExpanded ? '▲' : '▼'}</CustomText>
                 </TouchableOpacity>
 
                 {alDiaExpanded && (

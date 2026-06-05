@@ -1,7 +1,7 @@
+import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   TextInput,
   TouchableOpacity,
@@ -9,7 +9,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
-  SafeAreaView,
+  SafeAreaView
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -148,11 +148,11 @@ export default function MediosPagoScreen() {
       <View style={styles.card}>
         <Image source={{ uri: item.qr_image_path }} style={styles.qrThumbnail} />
         <View style={styles.cardInfo}>
-          <Text style={styles.cardBanco}>{item.banco_nombre}</Text>
+          <CustomText style={styles.cardBanco}>{item.banco_nombre}</CustomText>
           {item.descripcion ? (
-            <Text style={styles.cardDesc} numberOfLines={2}>
+            <CustomText style={styles.cardDesc} numberOfLines={2}>
               {item.descripcion}
-            </Text>
+            </CustomText>
           ) : null}
         </View>
         <TouchableOpacity
@@ -160,7 +160,7 @@ export default function MediosPagoScreen() {
           activeOpacity={0.7}
           onPress={() => handleEliminarMedio(item)}
         >
-          <Text style={styles.deleteButtonText}>✕</Text>
+          <CustomText style={styles.deleteButtonText}>✕</CustomText>
         </TouchableOpacity>
       </View>
     );
@@ -171,7 +171,7 @@ export default function MediosPagoScreen() {
       <View style={styles.container}>
         {/* Formulario */}
         <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Nuevo Medio de Pago</Text>
+          <CustomText style={styles.formTitle}>Nuevo Medio de Pago</CustomText>
           
           <TextInput
             style={styles.input}
@@ -200,7 +200,7 @@ export default function MediosPagoScreen() {
               {selectedImage ? (
                 <Image source={{ uri: selectedImage }} style={styles.selectedQrPreview} />
               ) : (
-                <Text style={styles.pickerBtnText}>📷 Seleccionar Código QR</Text>
+                <CustomText style={styles.pickerBtnText}>📷 Seleccionar Código QR</CustomText>
               )}
             </TouchableOpacity>
             
@@ -210,7 +210,7 @@ export default function MediosPagoScreen() {
                 activeOpacity={0.7}
                 onPress={() => setSelectedImage(null)}
               >
-                <Text style={styles.clearImageText}>Quitar Imagen</Text>
+                <CustomText style={styles.clearImageText}>Quitar Imagen</CustomText>
               </TouchableOpacity>
             ) : null}
           </View>
@@ -224,18 +224,18 @@ export default function MediosPagoScreen() {
             {guardando ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.saveBtnText}>Guardar Medio de Pago</Text>
+              <CustomText style={styles.saveBtnText}>Guardar Medio de Pago</CustomText>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Listado */}
         <View style={styles.listSection}>
-          <Text style={styles.listTitle}>Medios de Pago Activos</Text>
+          <CustomText style={styles.listTitle}>Medios de Pago Activos</CustomText>
           {loading ? (
             <ActivityIndicator size="large" color="#3b82f6" style={{ marginTop: 24 }} />
           ) : medios.length === 0 ? (
-            <Text style={styles.emptyListText}>No hay medios de pago registrados.</Text>
+            <CustomText style={styles.emptyListText}>No hay medios de pago registrados.</CustomText>
           ) : (
             <FlatList
               data={medios}

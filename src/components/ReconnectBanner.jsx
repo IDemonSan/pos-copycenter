@@ -1,5 +1,8 @@
+import CustomText from './CustomText';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, ActivityIndicator, Alert, View } from 'react-native';
+import {
+  StyleSheet, TouchableOpacity, ActivityIndicator, Alert, View
+} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { useAuth } from '../services/authService';
 import COLORS from '../constants/colors';
@@ -42,9 +45,9 @@ export default function ReconnectBanner() {
       disabled={isReconnecting}
     >
       <View style={styles.content}>
-        <Text style={styles.text}>
+        <CustomText style={styles.text}>
           {isReconnecting ? 'Reconectando respaldo...' : 'Respaldo en pausa — Toca para reconectar'}
-        </Text>
+        </CustomText>
         {isReconnecting && (
           <ActivityIndicator size="small" color="#fff" style={styles.loader} />
         )}

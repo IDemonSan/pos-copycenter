@@ -1,5 +1,8 @@
+import CustomText from './CustomText';
 import React from 'react';
-import { StyleSheet, Text, View, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet, View, Modal, TouchableOpacity, ActivityIndicator
+} from 'react-native';
 import COLORS from '../constants/colors';
 
 /**
@@ -40,8 +43,8 @@ export default function ConfirmModal({
     >
       <View style={styles.overlay}>
         <View style={styles.content}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+          <CustomText style={styles.title}>{title}</CustomText>
+          <CustomText style={styles.message}>{message}</CustomText>
 
           <View style={styles.buttonRow}>
             <TouchableOpacity
@@ -50,7 +53,7 @@ export default function ConfirmModal({
               disabled={isLoading}
               activeOpacity={0.7}
             >
-              <Text style={styles.cancelText}>Cancelar</Text>
+              <CustomText style={styles.cancelText}>Cancelar</CustomText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -62,7 +65,7 @@ export default function ConfirmModal({
               {isLoading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.confirmText}>{confirmText}</Text>
+                <CustomText style={styles.confirmText}>{confirmText}</CustomText>
               )}
             </TouchableOpacity>
           </View>
