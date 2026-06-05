@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { DbProvider, useDb } from './src/context/DbContext';
@@ -8,6 +8,7 @@ import { AuthProvider, initSession } from './src/services/authService';
 import { initSyncWorker } from './src/services/syncWorker';
 import { SyncProvider } from './src/context/SyncContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import * as NavigationBar from 'expo-navigation-bar';
 
 
 /**
@@ -15,6 +16,14 @@ import AppNavigator from './src/navigation/AppNavigator';
  */
 function AppContent() {
   const { db, isReady, error } = useDb();
+
+  // Configurar modo inmersivo en Android (ocultar botones de navegación nativos)
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setVisibilityAsync('hidden');
+      NavigationBar.setBehaviorAsync('sticky-immersive');
+    }
+  }, []);
 
   useEffect(() => {
     if (isReady && db) {
