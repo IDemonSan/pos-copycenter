@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   cantidadMulti: {
-    fontSize: 11,
+    fontSize: 13, // Increased base font size for better legibility on all devices
     color: '#3b82f6',
     fontStyle: 'italic',
     textAlign: 'center',

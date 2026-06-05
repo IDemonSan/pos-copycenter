@@ -21,7 +21,7 @@ import ProductButton from '../components/ProductButton';
 import CartItem from '../components/CartItem';
 import SyncStatusIcon from '../components/SyncStatusIcon';
 import CustomText from '../components/CustomText';
-import { scaleFont } from '../utils/responsive';
+import { scaleFont, numColumns, productsSectionHeight } from '../utils/responsive';
 
 const obtenerFechaLocal = () => {
   const hoy = new Date();
@@ -387,14 +387,15 @@ export default function POSScreen({ route, navigation }) {
             </View>
           </View>
 
-          {/* GRID DE PRODUCTOS - maxHeight estructural */}
-          <View style={styles.productsSection}>
+          {/* GRID DE PRODUCTOS - maxHeight estructural y altura/columnas dinámicas */}
+          <View style={[styles.productsSection, { height: productsSectionHeight, maxHeight: productsSectionHeight }]}>
             <FlatList
+              key={`products-list-${numColumns}`}
               data={productos}
               keyExtractor={(item) => item.id}
-              numColumns={3}
+              numColumns={numColumns}
               renderItem={({ item }) => (
-                <View style={styles.productCol}>
+                <View style={[styles.productCol, { flex: 1 / numColumns }]}>
                   <ProductButton
                     producto={item}
                     onPress={handleProductPress}
@@ -572,10 +573,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
-    justifyContent: 'space-between', // Distribución vertical estricta
+    justifyContent: 'space-between',
   },
   selectors: {
-    height: 'auto', // Altura intrínseca
+    height: 'auto',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -608,7 +609,7 @@ const styles = StyleSheet.create({
     color: '#f97316',
   },
   cartSection: {
-    flex: 1, // Absorbe todo el espacio dinámico de la pantalla
+    flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 16,
   },
@@ -627,8 +628,8 @@ const styles = StyleSheet.create({
   },
   lowerSection: {
     width: '100%',
-    maxWidth: 600, // Limita la deformación en pantallas anchas
-    alignSelf: 'center', // Centrado horizontal
+    maxWidth: 600,
+    alignSelf: 'center',
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
@@ -654,8 +655,6 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   productsSection: {
-    height: 180,
-    maxHeight: 180, // Límite de expansión estricto
     maxWidth: 600,
     alignSelf: 'center',
     width: '100%',
@@ -665,7 +664,6 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   productCol: {
-    flex: 1 / 3,
     padding: 2,
   },
   bufferIndicador: {

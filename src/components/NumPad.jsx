@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomText from './CustomText';
+import { keyHeight, confirmKeyHeight } from '../utils/responsive';
 
 /**
  * NumPad — Teclado numérico estático del POS.
@@ -43,9 +44,10 @@ export default function NumPad({
   };
 
   const getKeyStyle = (key) => {
-    if (key === '⌫') return [styles.key, styles.keyBackspace];
-    if (key === 'X')  return [styles.key, isModoMultiplicacion ? styles.keyXActivo : styles.keyX];
-    return styles.key;
+    const baseStyle = [styles.key, { height: keyHeight }];
+    if (key === '⌫') return [...baseStyle, styles.keyBackspace];
+    if (key === 'X')  return [...baseStyle, isModoMultiplicacion ? styles.keyXActivo : styles.keyX];
+    return baseStyle;
   };
 
   const getKeyTextStyle = (key) => {
@@ -78,6 +80,7 @@ export default function NumPad({
       <TouchableOpacity
         style={[
           styles.confirmKey,
+          { height: confirmKeyHeight },
           confirmDisabled && styles.confirmKeyDisabled,
         ]}
         onPress={onConfirmar}
@@ -114,7 +117,6 @@ const styles = StyleSheet.create({
   // ── Tecla genérica ───────────────────────────────────────────────────────
   key: {
     flex: 1,
-    height: 48, // Altura de tecla táctil ergonómica y estándar (48-52 ldp)
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 4,
@@ -157,7 +159,6 @@ const styles = StyleSheet.create({
   // ── Botón CONFIRMAR ───────────────────────────────────────────────────────
   confirmKey: {
     width: '100%',
-    height: 48, // Altura de tecla táctil ergonómica y estándar (48-52 ldp)
     borderRadius: 8,
     marginTop: 4,
     alignItems: 'center',
