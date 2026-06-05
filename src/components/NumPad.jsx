@@ -1,12 +1,11 @@
 import React from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CustomText from './CustomText';
 
 /**
  * NumPad — Teclado numérico estático del POS.
@@ -57,7 +56,7 @@ export default function NumPad({
 
   return (
     // paddingBottom dinámico para NO quedar detrás de la barra de navegación inferior
-    <View style={[styles.container, { paddingBottom: insets.bottom + 8 }]}>
+    <View style={[styles.container, { paddingBottom: Math.max(8, insets.bottom) }]}>
 
       {/* Grilla numérica 3×4 */}
       {rows.map((row, rowIndex) => (
@@ -69,7 +68,7 @@ export default function NumPad({
               onPress={() => handleKeyPress(key)}
               activeOpacity={0.7}
             >
-              <Text style={getKeyTextStyle(key)}>{key}</Text>
+              <CustomText style={getKeyTextStyle(key)}>{key}</CustomText>
             </TouchableOpacity>
           ))}
         </View>
@@ -85,7 +84,7 @@ export default function NumPad({
         disabled={confirmDisabled}
         activeOpacity={0.8}
       >
-        <Text style={styles.confirmText}>CONFIRMAR  ✔</Text>
+        <CustomText style={styles.confirmText}>CONFIRMAR  ✔</CustomText>
       </TouchableOpacity>
 
     </View>
@@ -99,19 +98,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: 320,
+    alignSelf: 'center',
   },
 
   // ── Fila de teclas ───────────────────────────────────────────────────────
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 6,
   },
 
   // ── Tecla genérica ───────────────────────────────────────────────────────
   key: {
     flex: 1,
-    height: 58,
+    height: 48, // Altura de tecla táctil ergonómica y estándar (48-52 ldp)
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 4,
@@ -119,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
   },
   keyText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '600',
     color: '#111827',
   },
@@ -130,7 +133,7 @@ const styles = StyleSheet.create({
   },
   keyBackspaceText: {
     color: '#dc2626',
-    fontSize: 20,
+    fontSize: 18,
   },
 
   // ── Tecla X (multiplicar) — inactiva ─────────────────────────────────────
@@ -154,7 +157,7 @@ const styles = StyleSheet.create({
   // ── Botón CONFIRMAR ───────────────────────────────────────────────────────
   confirmKey: {
     width: '100%',
-    height: 54,
+    height: 48, // Altura de tecla táctil ergonómica y estándar (48-52 ldp)
     borderRadius: 8,
     marginTop: 4,
     alignItems: 'center',
@@ -165,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#d1d5db',
   },
   confirmText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     color: '#ffffff',
     letterSpacing: 0.5,

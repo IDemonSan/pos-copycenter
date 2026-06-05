@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import CustomText from './CustomText';
 
 /**
  * Representa una fila o elemento en la lista del carrito de ventas.
@@ -26,27 +27,27 @@ export default function CartItem({ item, onRemove }) {
   return (
     <View style={styles.container}>
       <View style={styles.leftCol}>
-        <Text style={styles.name} numberOfLines={1}>
+        <CustomText style={styles.name} numberOfLines={1}>
           {item.producto_nombre}
-        </Text>
+        </CustomText>
       </View>
       <View style={styles.centerCol}>
         {mul ? (
-          <Text style={styles.cantidadMulti}>
+          <CustomText style={styles.cantidadMulti}>
             {mul.paquetes} copias × {mul.hojas} originales = {item.cantidad}
-          </Text>
+          </CustomText>
         ) : (
-          <Text style={styles.quantity}>x{item.cantidad}</Text>
+          <CustomText style={styles.quantity}>x{item.cantidad}</CustomText>
         )}
       </View>
       <View style={styles.rightCol}>
-        <Text style={styles.subtotal}>{formattedSubtotal}</Text>
+        <CustomText style={styles.subtotal}>{formattedSubtotal}</CustomText>
         <TouchableOpacity
           style={styles.removeButton}
           activeOpacity={0.7}
           onPress={() => onRemove(item.id)}
         >
-          <Text style={styles.removeText}>✕</Text>
+          <CustomText style={styles.removeText}>✕</CustomText>
         </TouchableOpacity>
       </View>
     </View>

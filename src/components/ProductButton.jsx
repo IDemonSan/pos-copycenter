@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, Animated } from 'react-native';
+import { StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import CustomText from './CustomText';
 
 /**
  * Botón para representar un producto en la grilla del POS con animación shake.
@@ -50,12 +51,12 @@ export default function ProductButton({ producto, onPress, shakeSignal }) {
         activeOpacity={0.7}
         onPress={() => onPress(producto)}
       >
-        <Text style={styles.name} numberOfLines={2}>
+        <CustomText style={styles.name} numberOfLines={2}>
           {producto.nombre}
-        </Text>
-        <Text style={[styles.price, isSpecial && styles.variablePrice]}>
+        </CustomText>
+        <CustomText style={[styles.price, isSpecial && styles.variablePrice]}>
           {displayPrice}
-        </Text>
+        </CustomText>
       </TouchableOpacity>
     </Animated.View>
   );

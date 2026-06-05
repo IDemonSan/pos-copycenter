@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  Text,
   View,
   FlatList,
   TouchableOpacity,
@@ -9,6 +8,7 @@ import {
   Modal,
   TextInput,
   SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -20,6 +20,8 @@ import NumPad from '../components/NumPad';
 import ProductButton from '../components/ProductButton';
 import CartItem from '../components/CartItem';
 import SyncStatusIcon from '../components/SyncStatusIcon';
+import CustomText from '../components/CustomText';
+import { scaleFont } from '../utils/responsive';
 
 const obtenerFechaLocal = () => {
   const hoy = new Date();
@@ -172,7 +174,7 @@ export default function POSScreen({ route, navigation }) {
                 backgroundColor: turnoActivo === 'Mañana' ? '#3b82f6' : 'transparent',
               }}
             >
-              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>AM</Text>
+              <CustomText style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>AM</CustomText>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleCambiarTurno('Tarde')}
@@ -183,7 +185,7 @@ export default function POSScreen({ route, navigation }) {
                 backgroundColor: turnoActivo === 'Tarde' ? '#3b82f6' : 'transparent',
               }}
             >
-              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>PM</Text>
+              <CustomText style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>PM</CustomText>
             </TouchableOpacity>
           </View>
           <SyncStatusIcon />
@@ -329,7 +331,8 @@ export default function POSScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* SELECTORS */}
+        
+        {/* SECCIÓN SUPERIOR (Filtros y Metadatos) - Altura intrínseca */}
         <View style={styles.selectors}>
           <View style={styles.pickerWrapper}>
             <Picker
@@ -349,17 +352,17 @@ export default function POSScreen({ route, navigation }) {
             activeOpacity={0.7}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={[styles.dateText, !isToday && styles.dateTextBatch]}>
+            <CustomText style={[styles.dateText, !isToday && styles.dateTextBatch]}>
               Fecha: {formatReadableDate(fechaVenta)} ✎
-            </Text>
+            </CustomText>
           </TouchableOpacity>
         </View>
 
-        {/* CARRITO */}
+        {/* SECCIÓN CENTRAL (Carrito / Detalle de Productos) - flex: 1 dinámico */}
         <View style={styles.cartSection}>
           {carrito.length === 0 ? (
             <View style={styles.emptyCart}>
-              <Text style={styles.emptyCartText}>Agrega productos</Text>
+              <CustomText style={styles.emptyCartText}>Agrega productos</CustomText>
             </View>
           ) : (
             <FlatList
@@ -371,57 +374,62 @@ export default function POSScreen({ route, navigation }) {
               contentContainerStyle={styles.cartListContent}
             />
           )}
+        </View>
 
-          {/* TOTAL & FOOTER */}
+        {/* SECCIÓN INFERIOR (Módulo de Control unificado con límites máximos) */}
+        <View style={styles.lowerSection}>
+          
+          {/* TOTAL ROW (Antes era parte de la sección de carrito, ahora anclado al control del pie) */}
           <View style={styles.cartFooter}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>TOTAL:</Text>
-              <Text style={styles.totalValue}>S/ {totalSoles}</Text>
+              <CustomText style={styles.totalLabel}>TOTAL:</CustomText>
+              <CustomText style={styles.totalValue}>S/ {totalSoles}</CustomText>
             </View>
           </View>
-        </View>
 
-        {/* PRODUCTOS */}
-        <View style={styles.productsSection}>
-          <FlatList
-            data={productos}
-            keyExtractor={(item) => item.id}
-            numColumns={3}
-            renderItem={({ item }) => (
-              <View style={styles.productCol}>
-                <ProductButton
-                  producto={item}
-                  onPress={handleProductPress}
-                  shakeSignal={shakeSignal}
-                />
-              </View>
+          {/* GRID DE PRODUCTOS - maxHeight estructural */}
+          <View style={styles.productsSection}>
+            <FlatList
+              data={productos}
+              keyExtractor={(item) => item.id}
+              numColumns={3}
+              renderItem={({ item }) => (
+                <View style={styles.productCol}>
+                  <ProductButton
+                    producto={item}
+                    onPress={handleProductPress}
+                    shakeSignal={shakeSignal}
+                  />
+                </View>
+              )}
+              scrollEnabled={true}
+            />
+          </View>
+
+          {/* INDICADOR DE BUFFER */}
+          <View style={styles.bufferIndicador}>
+            <CustomText style={styles.bufferTexto}>
+              {displayBuffer || '—'}
+            </CustomText>
+            {isModoMultiplicacion && (
+              <CustomText style={styles.bufferHint}>
+                toca un producto para agregar al carrito
+              </CustomText>
             )}
-            scrollEnabled={true}
-          />
-        </View>
+          </View>
 
-        {/* INDICADOR DE BUFFER */}
-        <View style={styles.bufferIndicador}>
-          <Text style={styles.bufferTexto}>
-            {displayBuffer || '—'}
-          </Text>
-          {isModoMultiplicacion && (
-            <Text style={styles.bufferHint}>
-              toca un producto para agregar al carrito
-            </Text>
-          )}
-        </View>
+          {/* NUMPAD */}
+          <View style={styles.numpadSection}>
+            <NumPad
+              onNumber={handleNumberPress}
+              onX={handleXPress}
+              onBackspace={handleBackspace}
+              onConfirmar={handleConfirmarVentaPress}
+              confirmDisabled={carrito.length === 0}
+              isModoMultiplicacion={isModoMultiplicacion}
+            />
+          </View>
 
-        {/* NUMPAD */}
-        <View style={styles.numpadSection}>
-          <NumPad
-            onNumber={handleNumberPress}
-            onX={handleXPress}
-            onBackspace={handleBackspace}
-            onConfirmar={handleConfirmarVentaPress}
-            confirmDisabled={carrito.length === 0}
-            isModoMultiplicacion={isModoMultiplicacion}
-          />
         </View>
 
         {/* DATE PICKER */}
@@ -449,14 +457,14 @@ export default function POSScreen({ route, navigation }) {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Precio Variable</Text>
-              <Text style={styles.modalSubtitle}>
+              <CustomText style={styles.modalTitle}>Precio Variable</CustomText>
+              <CustomText style={styles.modalSubtitle}>
                 {variableProductModal.producto?.nombre} - {
                   variableProductModal.multiplicadorInfo
                     ? `${variableProductModal.multiplicadorInfo.split('x')[0]} copias × ${variableProductModal.multiplicadorInfo.split('x')[1]} originales = ${variableProductModal.totalUnidades} unidades`
                     : `${variableProductModal.totalUnidades} unidad(es)`
                 }
-              </Text>
+              </CustomText>
               
               <TextInput
                 style={styles.priceInput}
@@ -476,14 +484,14 @@ export default function POSScreen({ route, navigation }) {
                     setVariableProductModal((prev) => ({ ...prev, visible: false }))
                   }
                 >
-                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                  <CustomText style={styles.modalCancelText}>Cancelar</CustomText>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
                   style={[styles.modalButton, styles.modalConfirmButton]}
                   onPress={handleConfirmVariablePrice}
                 >
-                  <Text style={styles.modalConfirmText}>Agregar</Text>
+                  <CustomText style={styles.modalConfirmText}>Agregar</CustomText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -501,15 +509,15 @@ export default function POSScreen({ route, navigation }) {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Caso Especial</Text>
-              <Text style={styles.modalSubtitle}>
+              <CustomText style={styles.modalTitle}>Caso Especial</CustomText>
+              <CustomText style={styles.modalSubtitle}>
                 {customProductModal.multiplicadorInfo
                   ? `${customProductModal.multiplicadorInfo.split('x')[0]} copias × ${customProductModal.multiplicadorInfo.split('x')[1]} originales = ${customProductModal.totalUnidades} unidades`
                   : `${customProductModal.totalUnidades} unidad(es)`
                 }
-              </Text>
+              </CustomText>
               
-              <Text style={{ marginTop: 10, alignSelf: 'flex-start', fontSize: 11, fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase' }}>Descripción / Nombre:</Text>
+              <CustomText style={{ marginTop: 10, alignSelf: 'flex-start', fontSize: 11, fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase' }}>Descripción / Nombre:</CustomText>
               <TextInput
                 style={[styles.priceInput, { marginBottom: 12, width: '100%' }]}
                 placeholder="Ej: Copias color del director"
@@ -520,7 +528,7 @@ export default function POSScreen({ route, navigation }) {
                 }
               />
 
-              <Text style={{ alignSelf: 'flex-start', fontSize: 11, fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase' }}>Precio (en soles):</Text>
+              <CustomText style={{ alignSelf: 'flex-start', fontSize: 11, fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase' }}>Precio (en soles):</CustomText>
               <TextInput
                 style={[styles.priceInput, { width: '100%' }]}
                 placeholder="0.00"
@@ -538,14 +546,14 @@ export default function POSScreen({ route, navigation }) {
                     setCustomProductModal((prev) => ({ ...prev, visible: false }))
                   }
                 >
-                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                  <CustomText style={styles.modalCancelText}>Cancelar</CustomText>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
                   style={[styles.modalButton, styles.modalConfirmButton]}
                   onPress={handleConfirmCustomProduct}
                 >
-                  <Text style={styles.modalConfirmText}>Agregar</Text>
+                  <CustomText style={styles.modalConfirmText}>Agregar</CustomText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -564,13 +572,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column',
+    justifyContent: 'space-between', // Distribución vertical estricta
   },
   selectors: {
-    height: 50,
+    height: 'auto', // Altura intrínseca
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
     backgroundColor: '#f9fafb',
@@ -598,7 +608,7 @@ const styles = StyleSheet.create({
     color: '#f97316',
   },
   cartSection: {
-    flex: 1,
+    flex: 1, // Absorbe todo el espacio dinámico de la pantalla
     backgroundColor: '#fff',
     paddingHorizontal: 16,
   },
@@ -615,10 +625,17 @@ const styles = StyleSheet.create({
   cartListContent: {
     paddingVertical: 8,
   },
-  cartFooter: {
+  lowerSection: {
+    width: '100%',
+    maxWidth: 600, // Limita la deformación en pantallas anchas
+    alignSelf: 'center', // Centrado horizontal
+    backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
+  },
+  cartFooter: {
     paddingVertical: 10,
+    paddingHorizontal: 16,
     backgroundColor: '#fff',
   },
   totalRow: {
@@ -638,6 +655,10 @@ const styles = StyleSheet.create({
   },
   productsSection: {
     height: 180,
+    maxHeight: 180, // Límite de expansión estricto
+    maxWidth: 600,
+    alignSelf: 'center',
+    width: '100%',
     backgroundColor: '#f9fafb',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
@@ -667,6 +688,7 @@ const styles = StyleSheet.create({
   },
   numpadSection: {
     backgroundColor: '#fff',
+    width: '100%',
   },
   modalOverlay: {
     flex: 1,
@@ -676,6 +698,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
+    maxWidth: 400,
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
