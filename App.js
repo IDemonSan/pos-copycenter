@@ -19,9 +19,21 @@ function AppContent() {
 
   // Configurar modo inmersivo en Android (ocultar botones de navegación nativos)
   useEffect(() => {
-    if (Platform.OS === 'android') {
-      NavigationBar.setVisibilityAsync('hidden');
-      NavigationBar.setBehaviorAsync('sticky-immersive');
+    if (Platform.OS === 'android' && NavigationBar) {
+      try {
+        if (typeof NavigationBar.setVisibilityAsync === 'function') {
+          NavigationBar.setVisibilityAsync('hidden').catch((err) => {
+            console.warn('[NavigationBar] Error setting visibility:', err);
+          });
+        }
+        if (typeof NavigationBar.setBehaviorAsync === 'function') {
+          NavigationBar.setBehaviorAsync('sticky-immersive').catch((err) => {
+            console.warn('[NavigationBar] Error setting behavior:', err);
+          });
+        }
+      } catch (err) {
+        console.warn('[NavigationBar] Error initializing immersive mode:', err);
+      }
     }
   }, []);
 
