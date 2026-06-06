@@ -7,9 +7,8 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  Alert,
   ActivityIndicator,
-  SafeAreaView
+  Alert
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -167,7 +166,7 @@ export default function MediosPagoScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         {/* Formulario */}
         <View style={styles.formCard}>
@@ -246,7 +245,7 @@ export default function MediosPagoScreen() {
           )}
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -6,8 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
-  SafeAreaView
+  Alert
 } from 'react-native';
 import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -252,7 +251,7 @@ export default function AulaDetailScreen() {
   const deudasPendientes = ventas.some((v) => v.estado_pago === 0);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header info */}
         <View style={styles.infoBlock}>
@@ -300,7 +299,7 @@ export default function AulaDetailScreen() {
           </TouchableOpacity>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

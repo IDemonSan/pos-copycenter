@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
-  SafeAreaView,
   Modal
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
@@ -201,7 +200,7 @@ export default function SalonesScreen() {
   const totalAulasRegistradas = conDeuda.length;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         {/* Selector de Mes Modal */}
         <Modal
@@ -305,7 +304,7 @@ export default function SalonesScreen() {
           />
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

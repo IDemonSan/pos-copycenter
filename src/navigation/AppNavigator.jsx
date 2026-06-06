@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as NavigationBar from 'expo-navigation-bar';
+import { useConfig } from '../context/ConfigContext';
 
 import HomeScreen from '../screens/HomeScreen';
 import POSScreen from '../screens/POSScreen';
@@ -94,10 +96,26 @@ function ConfigStack() {
 }
 
 export default function AppNavigator() {
+  const { mostrarEtiquetasMenu } = useConfig();
+
   return (
     <View style={{ flex: 1 }}>
       <ReconnectBanner />
       <Tab.Navigator
+        safeAreaInsets={{ bottom: 0 }}
+        screenListeners={{
+          state: () => {
+            if (Platform.OS === 'android' && NavigationBar) {
+              try {
+                // Forzamos el modo pegajoso y ocultamos EN BLOQUE
+                NavigationBar.setBehaviorAsync('sticky-immersive');
+                NavigationBar.setVisibilityAsync('hidden');
+              } catch (e) {
+                console.warn('[TabListener] Error:', e);
+              }
+            }
+          },
+        }}
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
@@ -118,11 +136,12 @@ export default function AppNavigator() {
           },
           tabBarActiveTintColor: '#3b82f6',
           tabBarInactiveTintColor: '#9ca3af',
+          tabBarShowLabel: mostrarEtiquetasMenu,
           tabBarStyle: {
             backgroundColor: '#ffffff',
             borderTopColor: '#e5e7eb',
-            height: 60,
-            paddingBottom: 8,
+            height: mostrarEtiquetasMenu ? 60 : 50,
+            paddingBottom: mostrarEtiquetasMenu ? 8 : 0,
           },
         })}
       >

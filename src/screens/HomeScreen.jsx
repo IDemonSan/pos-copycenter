@@ -5,8 +5,7 @@ import {
   View,
   TouchableOpacity,
   ActivityIndicator,
-  ScrollView,
-  SafeAreaView
+  ScrollView
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -103,7 +102,7 @@ export default function HomeScreen() {
   const hasSalesOrDebts = resumenDia.total_dia_cents > 0 || deudas.length > 0;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Saludo y Fecha */}
         <View style={styles.greetingHeader}>
@@ -188,7 +187,7 @@ export default function HomeScreen() {
           <CustomText style={styles.nuevaVentaText}>+ NUEVA VENTA</CustomText>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

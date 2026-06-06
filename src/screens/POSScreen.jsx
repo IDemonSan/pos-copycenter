@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,14 +7,14 @@ import {
   Alert,
   Modal,
   TextInput,
-  SafeAreaView,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDb } from '../context/DbContext';
 import { useVenta } from '../context/VentaContext';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { getProductosActivos } from '../database/queries/productos';
 import NumPad from '../components/NumPad';
 import ProductButton from '../components/ProductButton';
@@ -22,6 +22,7 @@ import CartItem from '../components/CartItem';
 import SyncStatusIcon from '../components/SyncStatusIcon';
 import CustomText from '../components/CustomText';
 import { scaleFont, scaleLayout, numColumns, deviceType } from '../utils/responsive';
+import * as NavigationBar from 'expo-navigation-bar';
 
 const obtenerFechaLocal = () => {
   const hoy = new Date();
@@ -62,6 +63,9 @@ function formatReadableDate(dateString) {
 }
 
 export default function POSScreen({ route, navigation }) {
+  const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+  const isCompact = screenHeight < 700 || screenWidth < 380;
+
   const { db } = useDb();
   const {
     carrito,
@@ -87,6 +91,27 @@ export default function POSScreen({ route, navigation }) {
     setFechaVenta,
     recargarTurno,
   } = useVenta();
+
+  // Forzar modo inmersivo cada vez que esta pantalla se monta o recupera el foco
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'android') return;
+
+      const timeoutId = setTimeout(async () => {
+        try {
+          if (NavigationBar) {
+            // Aseguramos que conserve el comportamiento sticky en Android 9
+            await NavigationBar.setBehaviorAsync('sticky-immersive');
+            await NavigationBar.setVisibilityAsync('hidden');
+          }
+        } catch (err) {
+          console.warn('[POSScreen] Error al forzar modo inmersivo:', err);
+        }
+      }, 150);
+
+      return () => clearTimeout(timeoutId);
+    }, [])
+  );
 
   const aulasDisponibles = AULAS_POR_TURNO[turnoActivo] ?? AULAS_POR_TURNO['Mañana'];
 
@@ -342,7 +367,7 @@ export default function POSScreen({ route, navigation }) {
   const dynamicProductsHeight = getDynamicProductsSectionHeight(productos.length);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         
         {/* SECCIÓN SUPERIOR (Filtros y Metadatos) - Altura intrínseca */}
@@ -393,10 +418,10 @@ export default function POSScreen({ route, navigation }) {
         <View style={styles.lowerSection}>
           
           {/* TOTAL ROW */}
-          <View style={styles.cartFooter}>
+          <View style={[styles.cartFooter, isCompact && { paddingVertical: scaleLayout(4) }]}>
             <View style={styles.totalRow}>
-              <CustomText style={styles.totalLabel}>TOTAL:</CustomText>
-              <CustomText style={styles.totalValue}>S/ {totalSoles}</CustomText>
+              <CustomText style={[styles.totalLabel, isCompact && { fontSize: 13 }]}>TOTAL:</CustomText>
+              <CustomText style={[styles.totalValue, isCompact && { fontSize: 17 }]}>S/ {totalSoles}</CustomText>
             </View>
           </View>
 
@@ -421,12 +446,12 @@ export default function POSScreen({ route, navigation }) {
           </View>
 
           {/* INDICADOR DE BUFFER */}
-          <View style={styles.bufferIndicador}>
-            <CustomText style={styles.bufferTexto}>
+          <View style={[styles.bufferIndicador, isCompact && { paddingVertical: scaleLayout(2) }]}>
+            <CustomText style={[styles.bufferTexto, isCompact && { fontSize: 20 }]}>
               {displayBuffer || '—'}
             </CustomText>
             {isModoMultiplicacion && (
-              <CustomText style={styles.bufferHint}>
+              <CustomText style={[styles.bufferHint, isCompact && { fontSize: 10, marginTop: scaleLayout(1) }]}>
                 toca un producto para agregar al carrito
               </CustomText>
             )}
@@ -574,7 +599,7 @@ export default function POSScreen({ route, navigation }) {
           </View>
         </Modal>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

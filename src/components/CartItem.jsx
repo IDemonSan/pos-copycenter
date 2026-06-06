@@ -34,7 +34,7 @@ export default function CartItem({ item, onRemove }) {
       <View style={styles.centerCol}>
         {mul ? (
           <CustomText style={styles.cantidadMulti}>
-            {mul.paquetes} copias × {mul.hojas} originales = {item.cantidad}
+            {mul.paquetes} × {mul.hojas} = {item.cantidad}
           </CustomText>
         ) : (
           <CustomText style={styles.quantity}>x{item.cantidad}</CustomText>

@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView
+  Switch
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -17,10 +17,12 @@ import { exportarBackup, importarBackup } from '../services/backupService';
 import { supabase } from '../services/supabaseClient';
 import COLORS from '../constants/colors';
 import { useSync } from '../context/SyncContext';
+import { useConfig } from '../context/ConfigContext';
 
 export default function ConfigScreen() {
   const { db } = useDb();
   const { actualizarConteo } = useSync();
+  const { mostrarEtiquetasMenu, setMostrarEtiquetasMenu } = useConfig();
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
@@ -273,7 +275,7 @@ export default function ConfigScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <FlatList
         data={productos}
         keyExtractor={(item) => item.id}
@@ -324,6 +326,16 @@ export default function ConfigScreen() {
                     </CustomText>
                   </TouchableOpacity>
                 </View>
+              </View>
+
+              <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+                <CustomText style={styles.settingLabel}>Mostrar textos en menú:</CustomText>
+                <Switch
+                  value={mostrarEtiquetasMenu}
+                  onValueChange={setMostrarEtiquetasMenu}
+                  trackColor={{ false: '#d1d5db', true: '#3b82f6' }}
+                  thumbColor={mostrarEtiquetasMenu ? '#fff' : '#f3f4f6'}
+                />
               </View>
 
               <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
@@ -426,7 +438,7 @@ export default function ConfigScreen() {
           </>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

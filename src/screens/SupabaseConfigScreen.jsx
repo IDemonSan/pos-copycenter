@@ -7,8 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  ScrollView,
-  SafeAreaView
+  ScrollView
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
@@ -92,17 +91,17 @@ export default function SupabaseConfigScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#3b82f6" />
           <CustomText style={styles.loadingText}>Cargando credenciales...</CustomText>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
           <CustomText style={styles.title}>Conexión con la Nube</CustomText>
@@ -174,7 +173,7 @@ export default function SupabaseConfigScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
