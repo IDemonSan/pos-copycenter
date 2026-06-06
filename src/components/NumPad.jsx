@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomText from './CustomText';
 import { keyHeight, confirmKeyHeight } from '../utils/responsive';
 
@@ -27,7 +26,6 @@ export default function NumPad({
   confirmDisabled = false,
   isModoMultiplicacion = false,
 }) {
-  const insets = useSafeAreaInsets();
 
   // Filas de la grilla numérica
   const rows = [
@@ -57,8 +55,7 @@ export default function NumPad({
   };
 
   return (
-    // paddingBottom dinámico para NO quedar detrás de la barra de navegación inferior
-    <View style={[styles.container, { paddingBottom: Math.max(8, insets.bottom) }]}>
+    <View style={styles.container}>
 
       {/* Grilla numérica 3×4 */}
       {rows.map((row, rowIndex) => (
@@ -98,6 +95,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 12,
     paddingTop: 8,
+    paddingBottom: 8,
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
