@@ -13,7 +13,7 @@ Mi mamá tiene un pequeño centro de fotocopiado dentro de un colegio. Durante a
 
 Era un proceso tedioso que le tomaba horas. Horas que perfectamente podía pasar con mi hermana y conmigo.
 
-Un día, mientras la veía sumar columnas enteras de números con una calculadora en una mano y un cuaderno en la otra, pensé: *"Esto tiene que haber una mejor manera"*.
+Un día, mientras la veía sumar columnas enteras de números con una calculadora en una mano y un cuaderno en la otra, pensé: *"Tiene que haber una mejor manera de realizar esto"*.
 
 Así nació **POS CopyCenter**.
 
