@@ -1,7 +1,7 @@
 /**
  * Versión actual del esquema en el código de la aplicación.
  */
-export const CODE_DB_VERSION = 4;
+export const CODE_DB_VERSION = 5;
 
 /**
  * Lista de migraciones ordenadas secuencialmente por versión.
@@ -63,6 +63,26 @@ const MIGRATIONS = [
         COMMIT;
       `);
     }
+  },
+  {
+    version: 5,
+    run: async (db) => {
+      // Verificar si la columna ya existe (pudo haber sido agregada por autocuración)
+      const columns = await db.getAllAsync("PRAGMA table_info(ventas);");
+      const hasPagadoCents = columns.some(col => col.name === 'pagado_cents');
+
+      await db.execAsync(`
+        BEGIN TRANSACTION;
+
+        ${hasPagadoCents ? 'SELECT 1;' : 'ALTER TABLE ventas ADD COLUMN pagado_cents INTEGER DEFAULT 0;'}
+
+        UPDATE app_config
+        SET value = '5'
+        WHERE key = 'db_version';
+
+        COMMIT;
+      `);
+    }
   }
 ];
 
@@ -91,7 +111,15 @@ export async function runMigrations(db) {
       console.log("[DB Autocuración] Columna is_custom añadida a productos.");
     }
 
-    // 3. Verificar existencia de tabla medios_pago
+    // 3. Verificar columna pagado_cents en ventas
+    const columnsVentas = await db.getAllAsync("PRAGMA table_info(ventas);");
+    const hasPagadoCents = columnsVentas.some(col => col.name === 'pagado_cents');
+    if (!hasPagadoCents) {
+      await db.execAsync("ALTER TABLE ventas ADD COLUMN pagado_cents INTEGER DEFAULT 0;");
+      console.log("[DB Autocuración] Columna pagado_cents añadida a ventas.");
+    }
+
+    // 4. Verificar existencia de tabla medios_pago
     await db.execAsync(`
       CREATE TABLE IF NOT EXISTS medios_pago (
           id INTEGER PRIMARY KEY AUTOINCREMENT,

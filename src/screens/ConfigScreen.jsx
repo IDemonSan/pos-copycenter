@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  FlatList,
+  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
-import { getTodosLosProductos, intercambiarOrden } from '../database/queries/productos';
 import { subirDatosPendientes, descargarDatosNube } from '../services/syncService';
 import { exportarBackup, importarBackup } from '../services/backupService';
 import { supabase } from '../services/supabaseClient';
@@ -27,7 +26,6 @@ export default function ConfigScreen() {
   const isFocused = useIsFocused();
 
   const [loading, setLoading] = useState(true);
-  const [productos, setProductos] = useState([]);
   const [turnoActivo, setTurnoActivo] = useState('Mañana');
   const [ultimoBackup, setUltimoBackup] = useState('Nunca');
   const [isBackupLoading, setIsBackupLoading] = useState(false);
@@ -43,13 +41,9 @@ export default function ConfigScreen() {
 
     setIsBackupLoading(true);
     try {
-      // 1. Ejecutar subida de datos pendientes
       const subidaStats = await subirDatosPendientes(db);
-
-      // 2. Ejecutar descarga/sincronización de datos nuevos de la nube
       const descargaStats = await descargarDatosNube(db);
 
-      // 3. Registrar fecha y hora del último respaldo localmente
       const nowStr = new Date().toLocaleString();
       await db.runAsync(
         "UPDATE app_config SET value = ? WHERE key = 'ultimo_backup';",
@@ -57,10 +51,7 @@ export default function ConfigScreen() {
       );
       setUltimoBackup(nowStr);
 
-      // 4. Recargar datos de la pantalla para mostrar cambios (ej: nuevos productos)
       await loadData();
-      
-      // 5. Actualizar conteo global en el header
       await actualizarConteo();
 
       Alert.alert(
@@ -124,11 +115,6 @@ export default function ConfigScreen() {
     if (!db) return;
     setLoading(true);
     try {
-      // 1. Cargar catálogo de productos
-      const prodList = await getTodosLosProductos(db);
-      setProductos(prodList);
-
-      // 2. Cargar turno activo de app_config
       const turnoRes = await db.getFirstAsync(
         "SELECT value FROM app_config WHERE key = 'turno_activo';"
       );
@@ -136,7 +122,6 @@ export default function ConfigScreen() {
         setTurnoActivo(turnoRes.value);
       }
 
-      // 3. Cargar último backup de app_config
       const backupRes = await db.getFirstAsync(
         "SELECT value FROM app_config WHERE key = 'ultimo_backup';"
       );
@@ -145,7 +130,6 @@ export default function ConfigScreen() {
       } else {
         setUltimoBackup('Nunca');
       }
-
     } catch (err) {
       console.error('[Config] Error al cargar configuración:', err);
     } finally {
@@ -158,42 +142,6 @@ export default function ConfigScreen() {
       loadData();
     }
   }, [isFocused, db]);
-
-  const handleMoveUp = async (index) => {
-    if (index === 0) return;
-    const itemA = productos[index];
-    const itemB = productos[index - 1];
-
-    try {
-      await intercambiarOrden(db, {
-        idA: itemA.id,
-        ordenA: itemB.orden_prioridad,
-        idB: itemB.id,
-        ordenB: itemA.orden_prioridad,
-      });
-      loadData();
-    } catch (err) {
-      Alert.alert('Error', 'No se pudo cambiar el orden de los productos.');
-    }
-  };
-
-  const handleMoveDown = async (index) => {
-    if (index === productos.length - 1) return;
-    const itemA = productos[index];
-    const itemB = productos[index + 1];
-
-    try {
-      await intercambiarOrden(db, {
-        idA: itemA.id,
-        ordenA: itemB.orden_prioridad,
-        idB: itemB.id,
-        ordenB: itemA.orden_prioridad,
-      });
-      loadData();
-    } catch (err) {
-      Alert.alert('Error', 'No se pudo cambiar el orden de los productos.');
-    }
-  };
 
   const handleToggleTurno = async (nuevoTurno) => {
     try {
@@ -208,64 +156,6 @@ export default function ConfigScreen() {
     }
   };
 
-  const renderProductItem = ({ item, index }) => {
-    const isFirst = index === 0;
-    const isLast = index === productos.length - 1;
-    const displayPrice =
-      item.is_custom === 1
-        ? 'Caso especial'
-        : item.is_variable === 1
-          ? 'Precio variable'
-          : `S/ ${(item.precio_cents / 100).toFixed(2)}`;
-
-    return (
-      <View style={styles.productRow}>
-        {/* Reordenar */}
-        <View style={styles.orderButtons}>
-          <TouchableOpacity
-            style={[styles.arrowBtn, isFirst && styles.arrowBtnDisabled]}
-            disabled={isFirst}
-            activeOpacity={0.7}
-            onPress={() => handleMoveUp(index)}
-          >
-            <CustomText style={[styles.arrowText, isFirst && styles.arrowTextDisabled]}>↑</CustomText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.arrowBtn, isLast && styles.arrowBtnDisabled]}
-            disabled={isLast}
-            activeOpacity={0.7}
-            onPress={() => handleMoveDown(index)}
-          >
-            <CustomText style={[styles.arrowText, isLast && styles.arrowTextDisabled]}>↓</CustomText>
-          </TouchableOpacity>
-        </View>
-
-        {/* Info */}
-        <View style={styles.productInfo}>
-          <CustomText style={styles.productName}>{item.nombre}</CustomText>
-          <View style={styles.productSubRow}>
-            <CustomText style={styles.productPrice}>{displayPrice}</CustomText>
-            <CustomText style={styles.bullet}>•</CustomText>
-            {item.activo === 1 ? (
-              <CustomText style={[styles.statusText, styles.statusActive]}>Activo ●</CustomText>
-            ) : (
-              <CustomText style={[styles.statusText, styles.statusInactive]}>Inactivo ○</CustomText>
-            )}
-          </View>
-        </View>
-
-        {/* Editar */}
-        <TouchableOpacity
-          style={styles.editBtn}
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate('ProductoEdit', { producto: item })}
-        >
-          <CustomText style={styles.editIcon}>✏️</CustomText>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -276,168 +166,154 @@ export default function ConfigScreen() {
 
   return (
     <View style={styles.safeArea}>
-      <FlatList
-        data={productos}
-        keyExtractor={(item) => item.id}
-        renderItem={renderProductItem}
-        contentContainerStyle={styles.scrollContainer}
-        ListHeaderComponent={
-          <>
-            {/* SECCIÓN 2: AJUSTES GENERALES */}
-            <View style={styles.sectionCard}>
-              <CustomText style={styles.sectionTitle}>Ajustes Generales</CustomText>
-              
-              <View style={styles.settingRow}>
-                <CustomText style={styles.settingLabel}>Turno activo:</CustomText>
-                <View style={styles.toggleContainer}>
-                  <TouchableOpacity
-                    style={[
-                      styles.toggleBtn,
-                      turnoActivo === 'Mañana' && styles.toggleBtnActive,
-                    ]}
-                    activeOpacity={0.7}
-                    onPress={() => handleToggleTurno('Mañana')}
-                  >
-                    <CustomText
-                      style={[
-                        styles.toggleText,
-                        turnoActivo === 'Mañana' && styles.toggleTextActive,
-                      ]}
-                    >
-                      Mañana
-                    </CustomText>
-                  </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* SECCIÓN 1: AJUSTES GENERALES */}
+        <View style={styles.sectionCard}>
+          <CustomText style={styles.sectionTitle}>Ajustes Generales</CustomText>
 
-                  <TouchableOpacity
-                    style={[
-                      styles.toggleBtn,
-                      turnoActivo === 'Tarde' && styles.toggleBtnActive,
-                    ]}
-                    activeOpacity={0.7}
-                    onPress={() => handleToggleTurno('Tarde')}
-                  >
-                    <CustomText
-                      style={[
-                        styles.toggleText,
-                        turnoActivo === 'Tarde' && styles.toggleTextActive,
-                      ]}
-                    >
-                      Tarde
-                    </CustomText>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
-                <CustomText style={styles.settingLabel}>Mostrar textos en menú:</CustomText>
-                <Switch
-                  value={mostrarEtiquetasMenu}
-                  onValueChange={setMostrarEtiquetasMenu}
-                  trackColor={{ false: '#d1d5db', true: '#3b82f6' }}
-                  thumbColor={mostrarEtiquetasMenu ? '#fff' : '#f3f4f6'}
-                />
-              </View>
-
-              <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
-                <CustomText style={styles.settingLabel}>Medios de Pago (QR):</CustomText>
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  activeOpacity={0.7}
-                  onPress={() => navigation.navigate('MediosPago')}
+          <View style={styles.settingRow}>
+            <CustomText style={styles.settingLabel}>Turno activo:</CustomText>
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.toggleBtn,
+                  turnoActivo === 'Mañana' && styles.toggleBtnActive,
+                ]}
+                activeOpacity={0.7}
+                onPress={() => handleToggleTurno('Mañana')}
+              >
+                <CustomText
+                  style={[
+                    styles.toggleText,
+                    turnoActivo === 'Mañana' && styles.toggleTextActive,
+                  ]}
                 >
-                  <CustomText style={styles.actionBtnText}>Configurar →</CustomText>
-                </TouchableOpacity>
-              </View>
+                  Mañana
+                </CustomText>
+              </TouchableOpacity>
 
-              <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
-                <CustomText style={styles.settingLabel}>Conexión Nube (Supabase):</CustomText>
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  activeOpacity={0.7}
-                  onPress={() => navigation.navigate('SupabaseConfig')}
+              <TouchableOpacity
+                style={[
+                  styles.toggleBtn,
+                  turnoActivo === 'Tarde' && styles.toggleBtnActive,
+                ]}
+                activeOpacity={0.7}
+                onPress={() => handleToggleTurno('Tarde')}
+              >
+                <CustomText
+                  style={[
+                    styles.toggleText,
+                    turnoActivo === 'Tarde' && styles.toggleTextActive,
+                  ]}
                 >
-                  <CustomText style={styles.actionBtnText}>Configurar →</CustomText>
-                </TouchableOpacity>
-              </View>
+                  Tarde
+                </CustomText>
+              </TouchableOpacity>
             </View>
+          </View>
 
-            {/* SECCIÓN 1: CABECERA CATÁLOGO DE PRODUCTOS */}
-            <View style={[styles.sectionTitleContainer, { marginTop: 16 }]}>
-              <CustomText style={styles.sectionTitle}>Catálogo de Productos</CustomText>
-            </View>
-          </>
-        }
-        ListFooterComponent={
-          <>
+          <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+            <CustomText style={styles.settingLabel}>Mostrar textos en menú:</CustomText>
+            <Switch
+              value={mostrarEtiquetasMenu}
+              onValueChange={setMostrarEtiquetasMenu}
+              trackColor={{ false: '#d1d5db', true: '#3b82f6' }}
+              thumbColor={mostrarEtiquetasMenu ? '#fff' : '#f3f4f6'}
+            />
+          </View>
+
+          <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+            <CustomText style={styles.settingLabel}>Medios de Pago (QR):</CustomText>
             <TouchableOpacity
-              style={styles.addButton}
+              style={styles.actionBtn}
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('ProductoEdit')}
+              onPress={() => navigation.navigate('MediosPago')}
             >
-              <CustomText style={styles.addButtonText}>+ Nuevo producto</CustomText>
+              <CustomText style={styles.actionBtnText}>Configurar →</CustomText>
             </TouchableOpacity>
-            {/* SECCIÓN 3: RESPALDO MANUAL */}
-            <View style={[styles.sectionCard, { marginTop: 24 }]}>
-              <CustomText style={styles.sectionTitle}>Copias de Seguridad</CustomText>
-              <CustomText style={styles.backupLog}>Último movimiento: {ultimoBackup}</CustomText>
+          </View>
 
-              {/* Opción A: Sincronización en la Nube */}
-              <View style={{ marginBottom: 16 }}>
-                <CustomText style={styles.backupSubTitle}>Sincronización en la Nube (Online)</CustomText>
-                <CustomText style={styles.backupNoticeText}>
-                  Respalda y recupera tus ventas y catálogo al instante sincronizando de forma bidireccional con Supabase.
-                </CustomText>
-                <TouchableOpacity
-                  style={[styles.primaryBackupBtn, isBackupLoading && styles.backupBtnDisabled]}
-                  disabled={isBackupLoading}
-                  activeOpacity={0.8}
-                  onPress={handleSyncNube}
-                >
-                  <CustomText style={styles.primaryBackupBtnText}>Sincronizar con la Nube</CustomText>
-                </TouchableOpacity>
-              </View>
+          <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+            <CustomText style={styles.settingLabel}>Conexión Nube (Supabase):</CustomText>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('SupabaseConfig')}
+            >
+              <CustomText style={styles.actionBtnText}>Configurar →</CustomText>
+            </TouchableOpacity>
+          </View>
 
-              {/* Separador */}
-              <View style={{ borderTopWidth: 1, borderTopColor: COLORS.borde, marginVertical: 12 }} />
+          {/* Catálogo de Productos como menú independiente */}
+          <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+            <CustomText style={styles.settingLabel}>Catálogo de Productos:</CustomText>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('ProductosList')}
+            >
+              <CustomText style={styles.actionBtnText}>Configurar →</CustomText>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-              {/* Opción B: Copia Local JSON */}
-              <View>
-                <CustomText style={styles.backupSubTitle}>Respaldo Local Offline (JSON)</CustomText>
-                <CustomText style={styles.backupNoticeText}>
-                  Guarda o recupera un archivo de texto encriptado en el almacenamiento del dispositivo.
-                </CustomText>
-                <View style={styles.rowButtons}>
-                  <TouchableOpacity
-                    style={[styles.secondaryBackupBtn, { marginRight: 8 }, isBackupLoading && styles.backupBtnDisabled]}
-                    disabled={isBackupLoading}
-                    activeOpacity={0.8}
-                    onPress={handleExportarJSON}
-                  >
-                    <CustomText style={styles.secondaryBackupBtnText}>Exportar JSON</CustomText>
-                  </TouchableOpacity>
+        {/* SECCIÓN 2: RESPALDO MANUAL */}
+        <View style={styles.sectionCard}>
+          <CustomText style={styles.sectionTitle}>Copias de Seguridad</CustomText>
 
-                  <TouchableOpacity
-                    style={[styles.secondaryBackupBtn, isBackupLoading && styles.backupBtnDisabled]}
-                    disabled={isBackupLoading}
-                    activeOpacity={0.8}
-                    onPress={handleImportarJSON}
-                  >
-                    <CustomText style={styles.secondaryBackupBtnText}>Importar JSON</CustomText>
-                  </TouchableOpacity>
-                </View>
-              </View>
+          {/* Nube */}
+          <View style={{ marginBottom: 16 }}>
+            <CustomText style={styles.backupSubTitle}>Sincronización en la Nube (Online)</CustomText>
+            <CustomText style={styles.backupNoticeText}>
+              Respalda y recupera tus ventas y catálogo al instante sincronizando de forma bidireccional con Supabase.
+            </CustomText>
+            <TouchableOpacity
+              style={[styles.primaryBackupBtn, isBackupLoading && styles.backupBtnDisabled]}
+              disabled={isBackupLoading}
+              activeOpacity={0.8}
+              onPress={handleSyncNube}
+            >
+              <CustomText style={styles.primaryBackupBtnText}>Sincronizar con la Nube</CustomText>
+            </TouchableOpacity>
+          </View>
 
-              {/* Indicador de carga de respaldo global */}
-              {isBackupLoading && (
-                <View style={styles.overlayLoading}>
-                  <ActivityIndicator size="small" color="#059669" />
-                  <CustomText style={styles.overlayText}>Procesando copia de seguridad...</CustomText>
-                </View>
-              )}
+          <View style={{ borderTopWidth: 1, borderTopColor: COLORS.borde, marginVertical: 12 }} />
+
+          {/* Local JSON */}
+          <View>
+            <CustomText style={styles.backupSubTitle}>Respaldo Local Offline (JSON)</CustomText>
+            <CustomText style={styles.backupNoticeText}>
+              Guarda o recupera un archivo de texto encriptado en el almacenamiento del dispositivo.
+            </CustomText>
+            <View style={styles.rowButtons}>
+              <TouchableOpacity
+                style={[styles.secondaryBackupBtn, { marginRight: 8 }, isBackupLoading && styles.backupBtnDisabled]}
+                disabled={isBackupLoading}
+                activeOpacity={0.8}
+                onPress={handleExportarJSON}
+              >
+                <CustomText style={styles.secondaryBackupBtnText}>Exportar JSON</CustomText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.secondaryBackupBtn, isBackupLoading && styles.backupBtnDisabled]}
+                disabled={isBackupLoading}
+                activeOpacity={0.8}
+                onPress={handleImportarJSON}
+              >
+                <CustomText style={styles.secondaryBackupBtnText}>Importar JSON</CustomText>
+              </TouchableOpacity>
             </View>
-          </>
-        }
-      />
+          </View>
+
+          {isBackupLoading && (
+            <View style={styles.overlayLoading}>
+              <ActivityIndicator size="small" color="#059669" />
+              <CustomText style={styles.overlayText}>Procesando copia de seguridad...</CustomText>
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -463,10 +339,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borde,
     marginBottom: 16,
-  },
-  sectionTitleContainer: {
-    paddingHorizontal: 4,
-    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 14,
@@ -512,106 +384,6 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     color: '#3b82f6',
-  },
-  productRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: COLORS.borde,
-  },
-  orderButtons: {
-    flexDirection: 'row',
-    marginRight: 12,
-  },
-  arrowBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 2,
-    borderWidth: 1,
-    borderColor: COLORS.borde,
-  },
-  arrowBtnDisabled: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#f3f4f6',
-  },
-  arrowText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.textoPrimario,
-  },
-  arrowTextDisabled: {
-    color: '#d1d5db',
-  },
-  productInfo: {
-    flex: 1,
-  },
-  productName: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: COLORS.textoPrimario,
-  },
-  productSubRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  productPrice: {
-    fontSize: 13,
-    color: COLORS.textoSecundario,
-  },
-  bullet: {
-    marginHorizontal: 6,
-    color: '#d1d5db',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  statusActive: {
-    color: COLORS.pagadoVerde,
-  },
-  statusInactive: {
-    color: COLORS.textoSecundario,
-  },
-  editBtn: {
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: COLORS.borde,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editIcon: {
-    fontSize: 14,
-  },
-  addButton: {
-    height: 48,
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: COLORS.borde,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 12,
-  },
-  addButtonText: {
-    color: COLORS.textoPrimario,
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  backupLog: {
-    fontSize: 14,
-    color: COLORS.textoSecundario,
-    marginBottom: 12,
   },
   backupSubTitle: {
     fontSize: 14,
@@ -694,24 +466,5 @@ const styles = StyleSheet.create({
     color: '#1d4ed8',
     fontWeight: 'bold',
     fontSize: 14,
-  },
-  inputLabel: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: COLORS.textoSecundario,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  textInput: {
-    height: 40,
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: COLORS.borde,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    color: COLORS.textoPrimario,
-    fontSize: 14,
-    marginBottom: 10,
   },
 });

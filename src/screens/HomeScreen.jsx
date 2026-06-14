@@ -178,14 +178,24 @@ export default function HomeScreen() {
           </>
         )}
 
-        {/* BOTÓN GRANDE NUEVA VENTA */}
-        <TouchableOpacity
-          style={styles.nuevaVentaButton}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('POS')}
-        >
-          <CustomText style={styles.nuevaVentaText}>+ NUEVA VENTA</CustomText>
-        </TouchableOpacity>
+        {/* BOTONES DE ACCIÓN */}
+        <View style={styles.actionButtonsRow}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.metricsButton]}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('Metricas')}
+          >
+            <CustomText style={styles.metricsButtonText}>📊 MÉTRICAS</CustomText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.nuevaVentaButton]}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('POS')}
+          >
+            <CustomText style={styles.nuevaVentaText}>+ NUEVA VENTA</CustomText>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </View>
   );
@@ -338,22 +348,37 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 13,
   },
-  nuevaVentaButton: {
+  actionButtonsRow: {
+    flexDirection: 'row',
+    marginTop: 24,
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
     height: 54,
-    backgroundColor: '#22c55e',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 24,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3,
   },
+  metricsButton: {
+    backgroundColor: '#6366f1',
+  },
+  metricsButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  nuevaVentaButton: {
+    backgroundColor: '#22c55e',
+  },
   nuevaVentaText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
 });

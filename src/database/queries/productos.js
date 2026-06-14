@@ -122,6 +122,32 @@ export async function actualizarProducto(db, producto) {
  * @param {number} params.ordenB Nuevo orden del producto B (será el antiguo de A)
  * @returns {Promise<void>}
  */
+/**
+ * Elimina un producto de la base de datos permanentemente.
+ * No afecta a detalle_ventas histórico porque no hay FK constraint.
+ * @param {import('expo-sqlite').SQLiteDatabase} db
+ * @param {string} productoId UUID del producto a eliminar
+ * @returns {Promise<void>}
+ */
+export async function eliminarProducto(db, productoId) {
+  try {
+    await db.runAsync('DELETE FROM productos WHERE id = ?;', [productoId]);
+  } catch (error) {
+    console.error('[DB Query] Error al eliminar producto:', error);
+    throw error;
+  }
+}
+
+/**
+ * Intercambia el orden_prioridad de dos productos en una sola transacción.
+ * @param {import('expo-sqlite').SQLiteDatabase} db Instancia de expo-sqlite
+ * @param {Object} params
+ * @param {string} params.idA UUID del producto A
+ * @param {number} params.ordenA Nuevo orden del producto A (será el antiguo de B)
+ * @param {string} params.idB UUID del producto B
+ * @param {number} params.ordenB Nuevo orden del producto B (será el antiguo de A)
+ * @returns {Promise<void>}
+ */
 export async function intercambiarOrden(db, { idA, ordenA, idB, ordenB }) {
   try {
     const now = new Date().toISOString();

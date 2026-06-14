@@ -7,16 +7,20 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  ScrollView
+  ScrollView,
+  Switch
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { inicializarSupabase, setAuthErrorState } from '../services/supabaseClient';
 import { initSession } from '../services/authService';
 import COLORS from '../constants/colors';
+import { useConfig } from '../context/ConfigContext';
 
 export default function SupabaseConfigScreen() {
   const navigation = useNavigation();
+
+  const { mostrarBannerReconexion, setMostrarBannerReconexion } = useConfig();
 
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
@@ -171,6 +175,25 @@ export default function SupabaseConfigScreen() {
               <CustomText style={styles.saveButtonText}>Guardar Conexión</CustomText>
             )}
           </TouchableOpacity>
+
+          {/* Separador visual antes del toggle */}
+          <View style={{ borderTopWidth: 1, borderTopColor: COLORS.borde, marginVertical: 20 }} />
+
+          {/* Toggle: mostrar banner de reconexión */}
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLabelContainer}>
+              <CustomText style={styles.toggleLabel}>Mostrar aviso de reconexión</CustomText>
+              <CustomText style={styles.toggleSubtext}>
+                Si la conexión con Supabase falla, muestra un banner naranja en la parte superior.
+              </CustomText>
+            </View>
+            <Switch
+              value={mostrarBannerReconexion}
+              onValueChange={setMostrarBannerReconexion}
+              trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
+              thumbColor={mostrarBannerReconexion ? '#3b82f6' : '#f3f4f6'}
+            />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -253,5 +276,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: COLORS.borde,
+    marginTop: 20,
+  },
+  toggleLabelContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  toggleLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textoPrimario,
+  },
+  toggleSubtext: {
+    fontSize: 12,
+    color: COLORS.textoSecundario,
+    marginTop: 4,
+    lineHeight: 16,
   },
 });

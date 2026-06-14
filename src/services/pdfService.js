@@ -4,6 +4,7 @@ import * as FileSystem from 'expo-file-system';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDetalleVenta } from '../database/queries/ventas';
+import { normalizarExpresion } from '../utils/expresiones';
 
 const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -155,14 +156,41 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
     ventasPorFecha[readableDate].push(...detalles);
   }
 
-  // 3. Armar filas HTML agrupadas por fecha
+  // 3. Armar filas HTML agrupadas por fecha y fusionando mismo producto
   let filasHTML = '';
   const fechasOrdenadas = Object.keys(ventasPorFecha);
 
   for (const fecha of fechasOrdenadas) {
     const detalles = ventasPorFecha[fecha];
-    for (let i = 0; i < detalles.length; i++) {
-      const det = detalles[i];
+    
+    // Agrupar detalles por producto_id para fusionar mismo producto
+    const grupos = {};
+    for (const det of detalles) {
+      const key = det.producto_id || det.producto_nombre;
+      if (!grupos[key]) {
+        grupos[key] = { ...det };
+      } else {
+        // Fusionar: sumar cantidades y subtotales, concatenar expresiones
+        grupos[key].cantidad += det.cantidad;
+        grupos[key].subtotal_cents += det.subtotal_cents;
+        // Concatenar y simplificar detalle_multiplicador si existe
+        // Si mismo multiplicando se repite, se factoriza (ej: "30x3"+"30" → "30x4")
+        if (det.detalle_multiplicador) {
+          if (grupos[key].detalle_multiplicador) {
+            const combinada = grupos[key].detalle_multiplicador + '+' + det.detalle_multiplicador;
+            grupos[key].detalle_multiplicador = normalizarExpresion(combinada);
+          } else {
+            grupos[key].detalle_multiplicador = det.detalle_multiplicador;
+          }
+        }
+      }
+    }
+
+    const detallesAgrupados = Object.values(grupos);
+    const rowspan = detallesAgrupados.length;
+
+    for (let i = 0; i < detallesAgrupados.length; i++) {
+      const det = detallesAgrupados[i];
       const cantidadTexto = det.detalle_multiplicador
         ? `${det.cantidad} (${det.detalle_multiplicador})`
         : `${det.cantidad}`;
@@ -173,7 +201,7 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
       
       if (i === 0) {
         filasHTML += `
-          <td rowspan="${detalles.length}" style="vertical-align: middle; font-weight: bold; background-color: #fafafa; border-right: 1px solid #e5e7eb; text-align: center;">
+          <td rowspan="${rowspan}" style="vertical-align: middle; font-weight: bold; background-color: #fafafa; border-right: 1px solid #e5e7eb; text-align: center;">
             ${fecha}
           </td>
         `;

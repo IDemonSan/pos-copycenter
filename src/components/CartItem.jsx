@@ -11,10 +11,25 @@ import CustomText from './CustomText';
  * @param {number} props.item.cantidad Cantidad agregada
  * @param {number} props.item.precio_unitario_cents Precio unitario en centavos
  * @param {number} props.item.subtotal_cents Subtotal en centavos
+ * @param {string|null} props.item.detalle_multiplicador Expresión compuesta (ej: "30x3+15")
  * @param {(id: string) => void} props.onRemove Callback al pulsar para eliminar del carrito
+ */
+
+/**
+ * Verifica si un detalle_multiplicador es una expresión compuesta (contiene +).
+ * Ej: "30x3+15" → true, "30x3" → false, null → false
+ */
+function esExpresionCompuesta(expr) {
+  return !!expr && expr.includes('+');
+}
+
+/**
+ * Parsea un detalle_multiplicador simple (sin +).
+ * Ej: "30x3" → { paquetes: "30", hojas: "3" }
  */
 function parsearMultiplicador(detalle_multiplicador) {
   if (!detalle_multiplicador) return null;
+  if (esExpresionCompuesta(detalle_multiplicador)) return null;
   const partes = detalle_multiplicador.split('x');
   if (partes.length !== 2) return null;
   return { paquetes: partes[0], hojas: partes[1] };
@@ -23,6 +38,7 @@ function parsearMultiplicador(detalle_multiplicador) {
 export default function CartItem({ item, onRemove }) {
   const formattedSubtotal = `S/ ${(item.subtotal_cents / 100).toFixed(2)}`;
   const mul = parsearMultiplicador(item.detalle_multiplicador);
+  const esCompuesta = esExpresionCompuesta(item.detalle_multiplicador);
 
   return (
     <View style={styles.container}>
@@ -32,7 +48,11 @@ export default function CartItem({ item, onRemove }) {
         </CustomText>
       </View>
       <View style={styles.centerCol}>
-        {mul ? (
+        {esCompuesta ? (
+          <CustomText style={styles.cantidadMulti}>
+            {item.cantidad} ({item.detalle_multiplicador})
+          </CustomText>
+        ) : mul ? (
           <CustomText style={styles.cantidadMulti}>
             {mul.paquetes} × {mul.hojas} = {item.cantidad}
           </CustomText>
@@ -81,7 +101,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   cantidadMulti: {
-    fontSize: 13, // Increased base font size for better legibility on all devices
+    fontSize: 13,
     color: '#3b82f6',
     fontStyle: 'italic',
     textAlign: 'center',

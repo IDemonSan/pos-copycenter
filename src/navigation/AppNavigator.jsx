@@ -1,16 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useConfig } from '../context/ConfigContext';
 
 import HomeScreen from '../screens/HomeScreen';
+import MetricasScreen from '../screens/MetricasScreen';
+import MetricasDetalleDiasScreen from '../screens/MetricasDetalleDiasScreen';
+import MetricasDetalleDiaScreen from '../screens/MetricasDetalleDiaScreen';
+import MetricasDetalleMesesScreen from '../screens/MetricasDetalleMesesScreen';
 import POSScreen from '../screens/POSScreen';
 import SalonesScreen from '../screens/SalonesScreen';
 import AulaDetailScreen from '../screens/AulaDetailScreen';
 import ConfigScreen from '../screens/ConfigScreen';
+import ProductosListScreen from '../screens/ProductosListScreen';
 import ProductoEditScreen from '../screens/ProductoEditScreen';
 import MediosPagoScreen from '../screens/MediosPagoScreen';
 import SupabaseConfigScreen from '../screens/SupabaseConfigScreen';
@@ -18,7 +23,7 @@ import SyncStatusIcon from '../components/SyncStatusIcon';
 import ReconnectBanner from '../components/ReconnectBanner';
 
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 
 
@@ -46,6 +51,26 @@ function InicioStack() {
         name="AulaDetail"
         component={AulaDetailScreen}
         options={{ title: 'Detalle de Aula' }}
+      />
+      <Stack.Screen
+        name="Metricas"
+        component={MetricasScreen}
+        options={{ title: 'Métricas' }}
+      />
+      <Stack.Screen
+        name="MetricasDetalleDias"
+        component={MetricasDetalleDiasScreen}
+        options={{ title: 'Ventas por Día' }}
+      />
+      <Stack.Screen
+        name="MetricasDetalleDia"
+        component={MetricasDetalleDiaScreen}
+        options={{ title: 'Detalle del Día' }}
+      />
+      <Stack.Screen
+        name="MetricasDetalleMeses"
+        component={MetricasDetalleMesesScreen}
+        options={{ title: 'Ventas por Mes' }}
       />
     </Stack.Navigator>
   );
@@ -77,6 +102,11 @@ function ConfigStack() {
         options={{ title: 'Configuración' }}
       />
       <Stack.Screen
+        name="ProductosList"
+        component={ProductosListScreen}
+        options={{ title: 'Catálogo de Productos' }}
+      />
+      <Stack.Screen
         name="ProductoEdit"
         component={ProductoEditScreen}
         options={{ title: 'Editar Producto' }}
@@ -96,11 +126,11 @@ function ConfigStack() {
 }
 
 export default function AppNavigator() {
-  const { mostrarEtiquetasMenu } = useConfig();
+  const { mostrarEtiquetasMenu, mostrarBannerReconexion } = useConfig();
 
   return (
     <View style={{ flex: 1 }}>
-      <ReconnectBanner />
+      {mostrarBannerReconexion && <ReconnectBanner />}
       <Tab.Navigator
         safeAreaInsets={{ bottom: 0 }}
         screenListeners={{
