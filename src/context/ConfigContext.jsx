@@ -4,6 +4,8 @@ import * as SecureStore from 'expo-secure-store';
 const ConfigContext = createContext({
   mostrarEtiquetasMenu: true,
   setMostrarEtiquetasMenu: () => {},
+  mostrarBannerReconexion: true,
+  setMostrarBannerReconexion: () => {},
 });
 
 export function useConfig() {
@@ -12,6 +14,7 @@ export function useConfig() {
 
 export function ConfigProvider({ children }) {
   const [mostrarEtiquetasMenu, setMostrarEtiquetasMenuState] = useState(true);
+  const [mostrarBannerReconexion, setMostrarBannerReconexionState] = useState(true);
 
   useEffect(() => {
     async function loadConfig() {
@@ -19,6 +22,10 @@ export function ConfigProvider({ children }) {
         const value = await SecureStore.getItemAsync('mostrarEtiquetasMenu');
         if (value !== null) {
           setMostrarEtiquetasMenuState(value === 'true');
+        }
+        const bannerValue = await SecureStore.getItemAsync('mostrarBannerReconexion');
+        if (bannerValue !== null) {
+          setMostrarBannerReconexionState(bannerValue === 'true');
         }
       } catch (err) {
         console.warn('[ConfigContext] Error al cargar configuración:', err);
@@ -36,8 +43,17 @@ export function ConfigProvider({ children }) {
     }
   };
 
+  const setMostrarBannerReconexion = async (value) => {
+    try {
+      setMostrarBannerReconexionState(value);
+      await SecureStore.setItemAsync('mostrarBannerReconexion', String(value));
+    } catch (err) {
+      console.warn('[ConfigContext] Error al guardar configuración:', err);
+    }
+  };
+
   return (
-    <ConfigContext.Provider value={{ mostrarEtiquetasMenu, setMostrarEtiquetasMenu }}>
+    <ConfigContext.Provider value={{ mostrarEtiquetasMenu, setMostrarEtiquetasMenu, mostrarBannerReconexion, setMostrarBannerReconexion }}>
       {children}
     </ConfigContext.Provider>
   );

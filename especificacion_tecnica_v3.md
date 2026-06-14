@@ -898,6 +898,229 @@ Los textos de Alert son directos: "¿Confirmar venta de S/ 5.50 para 3° A?" —
 
 ---
 
+## Apéndice: Script SQL Completo para Supabase
+
+Este script crea toda la estructura de base de datos en Supabase (PostgreSQL).
+Copia y pega en **SQL Editor** → **New Query** y ejecuta.
+
+> **Nota:** La estructura es idéntica a la de SQLite local, con las adaptaciones necesarias para PostgreSQL.
+
+```sql
+-- ============================================================
+-- POS CopyCenter — Script de Configuración para Supabase
+-- PostgreSQL 15+
+-- Ejecutar en: SQL Editor → New Query
+-- ============================================================
+
+-- ============================================================
+-- 1. CREACIÓN DE TABLAS
+-- ============================================================
+
+-- 1.1 Productos (catálogo)
+CREATE TABLE IF NOT EXISTS public.productos (
+    id TEXT PRIMARY KEY NOT NULL,
+    nombre TEXT NOT NULL,
+    precio_cents INTEGER NOT NULL,
+    is_variable INTEGER DEFAULT 0,
+    is_custom INTEGER DEFAULT 0,
+    orden_prioridad INTEGER DEFAULT 0,
+    activo INTEGER DEFAULT 1,
+    is_synced INTEGER DEFAULT 0,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_productos_pos ON public.productos(activo, orden_prioridad);
+
+-- 1.2 Ventas (cabecera de cada pedido)
+CREATE TABLE IF NOT EXISTS public.ventas (
+    id TEXT PRIMARY KEY NOT NULL,
+    fecha_venta DATE NOT NULL,
+    fecha_registro TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    turno TEXT NOT NULL CHECK (turno IN ('Mañana', 'Tarde')),
+    aula TEXT NOT NULL,
+    total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
+    estado_pago INTEGER DEFAULT 0 CHECK (estado_pago IN (0, 1)),
+    pagado_cents INTEGER DEFAULT 0 CHECK (pagado_cents >= 0),
+    anulado_at TIMESTAMPTZ,
+    motivo_anulacion TEXT,
+    is_synced INTEGER DEFAULT 0,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_ventas_reportes ON public.ventas(estado_pago, anulado_at, fecha_venta, aula);
+CREATE INDEX IF NOT EXISTS idx_ventas_sync ON public.ventas(is_synced);
+CREATE INDEX IF NOT EXISTS idx_ventas_aula_fecha ON public.ventas(aula, fecha_venta);
+
+-- 1.3 Detalle de ventas (líneas de cada pedido)
+CREATE TABLE IF NOT EXISTS public.detalle_ventas (
+    id TEXT PRIMARY KEY NOT NULL,
+    venta_id TEXT NOT NULL REFERENCES public.ventas(id) ON DELETE CASCADE,
+    producto_id TEXT,
+    producto_nombre TEXT NOT NULL,
+    cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+    precio_unitario_cents INTEGER NOT NULL CHECK (precio_unitario_cents >= 0),
+    subtotal_cents INTEGER NOT NULL CHECK (subtotal_cents >= 0),
+    detalle_multiplicador TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_detalle_venta_id ON public.detalle_ventas(venta_id);
+
+-- 1.4 Medios de pago (QR de Yape/Plin para PDF)
+CREATE TABLE IF NOT EXISTS public.medios_pago (
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    banco_nombre TEXT NOT NULL,
+    qr_image_path TEXT NOT NULL,
+    descripcion TEXT
+);
+
+-- 1.5 Configuración de la app (versión de esquema, etc.)
+CREATE TABLE IF NOT EXISTS public.app_config (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
+
+INSERT INTO public.app_config (key, value) VALUES ('db_version', '5') ON CONFLICT (key) DO NOTHING;
+INSERT INTO public.app_config (key, value) VALUES ('turno_activo', 'Mañana') ON CONFLICT (key) DO NOTHING;
+
+-- ============================================================
+-- 2. ROW LEVEL SECURITY (RLS)
+-- ============================================================
+
+-- Habilitar RLS en todas las tablas
+ALTER TABLE public.productos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ventas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.detalle_ventas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.medios_pago ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_config ENABLE ROW LEVEL SECURITY;
+
+-- Política: solo usuarios autenticados pueden operar
+CREATE POLICY "Solo usuarios autenticados — productos"
+    ON public.productos FOR ALL
+    TO authenticated
+    USING (auth.uid() IS NOT NULL)
+    WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Solo usuarios autenticados — ventas"
+    ON public.ventas FOR ALL
+    TO authenticated
+    USING (auth.uid() IS NOT NULL)
+    WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Solo usuarios autenticados — detalle_ventas"
+    ON public.detalle_ventas FOR ALL
+    TO authenticated
+    USING (auth.uid() IS NOT NULL)
+    WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Solo usuarios autenticados — medios_pago"
+    ON public.medios_pago FOR ALL
+    TO authenticated
+    USING (auth.uid() IS NOT NULL)
+    WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Solo usuarios autenticados — app_config"
+    ON public.app_config FOR ALL
+    TO authenticated
+    USING (auth.uid() IS NOT NULL)
+    WITH CHECK (auth.uid() IS NOT NULL);
+
+-- ============================================================
+-- 3. TRIGGER ANTI-ESCRITURA VIEJA (Multi-Dispositivo)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.prevent_stale_update()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.updated_at < OLD.updated_at THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Aplicar a tablas que se sincronizan
+DROP TRIGGER IF EXISTS check_staleness_ventas ON public.ventas;
+CREATE TRIGGER check_staleness_ventas
+    BEFORE UPDATE ON public.ventas
+    FOR EACH ROW
+    EXECUTE FUNCTION public.prevent_stale_update();
+
+DROP TRIGGER IF EXISTS check_staleness_productos ON public.productos;
+CREATE TRIGGER check_staleness_productos
+    BEFORE UPDATE ON public.productos
+    FOR EACH ROW
+    EXECUTE FUNCTION public.prevent_stale_update();
+
+DROP TRIGGER IF EXISTS check_staleness_detalle_ventas ON public.detalle_ventas;
+CREATE TRIGGER check_staleness_detalle_ventas
+    BEFORE UPDATE ON public.detalle_ventas
+    FOR EACH ROW
+    EXECUTE FUNCTION public.prevent_stale_update();
+
+-- ============================================================
+-- 4. VISTA DE REPORTE: Deuda por aula y mes
+-- ============================================================
+
+CREATE OR REPLACE VIEW public.vista_deuda_por_aula AS
+SELECT
+    aula,
+    CASE
+        WHEN aula LIKE '%C' THEN 'Tarde'
+        ELSE 'Mañana'
+    END AS turno,
+    SUM(total_cents - COALESCE(pagado_cents, 0)) AS deuda_cents,
+    COUNT(*) AS num_pedidos,
+    TO_CHAR(fecha_venta, 'YYYY-MM') AS mes
+FROM public.ventas
+WHERE anulado_at IS NULL
+    AND total_cents > COALESCE(pagado_cents, 0)
+GROUP BY aula, TO_CHAR(fecha_venta, 'YYYY-MM')
+ORDER BY deuda_cents DESC;
+
+-- ============================================================
+-- 5. SEED DATA: Productos iniciales
+-- ============================================================
+
+INSERT INTO public.productos (id, nombre, precio_cents, is_variable, orden_prioridad, activo, updated_at)
+VALUES
+    ('prod-001', 'Copia B/N A4', 10, 0, 1, 1, NOW()),
+    ('prod-002', 'Copia color A4', 30, 0, 2, 1, NOW()),
+    ('prod-003', 'Copia B/N A3', 100, 0, 3, 1, NOW()),
+    ('prod-004', 'Copia color A3', 200, 0, 4, 1, NOW()),
+    ('prod-005', 'Impresión simple', 30, 0, 5, 1, NOW()),
+    ('prod-006', 'Impresión A4', 50, 0, 5, 1, NOW()),
+    ('prod-007', 'Impresión A4 color', 100, 0, 5, 1, NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- 6. VERIFICACIÓN FINAL
+-- ============================================================
+
+-- Mostrar tablas creadas
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+    AND table_type = 'BASE TABLE'
+ORDER BY table_name;
+
+-- Mostrar políticas RLS activas
+SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
+FROM pg_policies
+WHERE schemaname = 'public'
+ORDER BY tablename;
+
+-- Mostrar triggers activos
+SELECT trigger_name, event_manipulation, event_object_table
+FROM information_schema.triggers
+WHERE trigger_schema = 'public'
+ORDER BY event_object_table, trigger_name;
+
+-- Mostrar productos insertados
+SELECT id, nombre, precio_cents FROM public.productos ORDER BY orden_prioridad;
+```
+
+---
+
 ## 13. Decisiones de Diseño Documentadas
 
 Esta sección registra el **por qué** de las decisiones no obvias, para que cualquier desarrollador futuro entienda el razonamiento y no revierta decisiones sin darse cuenta.

@@ -122,24 +122,67 @@ export async function anularVenta(db, { id, motivo }) {
 
 /**
  * Marca una lista de ventas como pagadas.
+ *
+ * Si se proporciona `montoCents`, distribuye el pago FIFO (las ventas más
+ * antiguas primero). Si no se proporciona, marca todo como pagado.
+ *
  * @param {import('expo-sqlite').SQLiteDatabase} db Instancia de expo-sqlite
  * @param {Object} params
  * @param {Array<string>} params.ventaIds Lista de UUIDs de las ventas
+ * @param {number} [params.montoCents] Monto a pagar en centavos (pago parcial). Si se omite, paga todo.
  * @returns {Promise<void>}
  */
-export async function marcarComoPagado(db, { ventaIds }) {
+export async function marcarComoPagado(db, { ventaIds, montoCents }) {
   try {
     const now = new Date().toISOString();
+
     await db.withTransactionAsync(async () => {
-      for (const id of ventaIds) {
-        await db.runAsync(
-          `UPDATE ventas
-           SET estado_pago = 1,
-               is_synced = 0,
-               updated_at = ?
-           WHERE id = ?;`,
-          [now, id]
+      if (montoCents == null) {
+        // Pago total: marcar todas como pagadas al 100%
+        for (const id of ventaIds) {
+          await db.runAsync(
+            `UPDATE ventas
+             SET estado_pago = 1,
+                 pagado_cents = total_cents,
+                 is_synced = 0,
+                 updated_at = ?
+             WHERE id = ?;`,
+            [now, id]
+          );
+        }
+      } else {
+        // Pago parcial: distribuir FIFO (más antiguas primero)
+        const pendientes = await db.getAllAsync(
+          `SELECT id, total_cents, COALESCE(pagado_cents, 0) as pagado_cents
+           FROM ventas
+           WHERE id IN (${ventaIds.map(() => '?').join(',')})
+             AND total_cents > COALESCE(pagado_cents, 0)
+           ORDER BY fecha_venta ASC, fecha_registro ASC;`,
+          ventaIds
         );
+
+        let remaining = montoCents;
+
+        for (const venta of pendientes) {
+          if (remaining <= 0) break;
+
+          const saldo = venta.total_cents - venta.pagado_cents;
+          const abono = Math.min(saldo, remaining);
+          const nuevoPagado = venta.pagado_cents + abono;
+          const estaPagada = nuevoPagado >= venta.total_cents;
+
+          await db.runAsync(
+            `UPDATE ventas
+             SET pagado_cents = ?,
+                 estado_pago = ?,
+                 is_synced = 0,
+                 updated_at = ?
+             WHERE id = ?;`,
+            [nuevoPagado, estaPagada ? 1 : 0, now, venta.id]
+          );
+
+          remaining -= abono;
+        }
       }
     });
   } catch (error) {

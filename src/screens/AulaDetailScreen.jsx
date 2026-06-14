@@ -1,5 +1,5 @@
 import CustomText from '../components/CustomText';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,6 +12,7 @@ import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native'
 import { useDb } from '../context/DbContext';
 import { anularVenta, marcarComoPagado } from '../database/queries/ventas';
 import { generarPDFLiquidacion } from '../services/pdfService';
+import ConfirmModal from '../components/ConfirmModal';
 import COLORS from '../constants/colors';
 
 const MESES = [
@@ -42,6 +43,9 @@ export default function AulaDetailScreen() {
   const [ventas, setVentas] = useState([]);
   const [deudaTotalCents, setDeudaTotalCents] = useState(0);
   const [generandoPDF, setGenerandoPDF] = useState(false);
+  const [confirmPagoVisible, setConfirmPagoVisible] = useState(false);
+  const [procesandoPago, setProcesandoPago] = useState(false);
+  const procesandoRef = useRef(false);
 
   const handleGenerarPDF = async () => {
     setGenerandoPDF(true);
@@ -88,8 +92,9 @@ export default function AulaDetailScreen() {
         );
         salesWithDetails.push({ ...sale, detalles: details });
 
-        if (sale.estado_pago === 0) {
-          totalDeuda += sale.total_cents;
+        const saldo = sale.total_cents - (sale.pagado_cents || 0);
+        if (saldo > 0) {
+          totalDeuda += saldo;
         }
       }
 
@@ -111,29 +116,27 @@ export default function AulaDetailScreen() {
   const handleMarcarTodoPagado = () => {
     const unpaidVentas = ventas.filter((v) => v.estado_pago === 0);
     if (unpaidVentas.length === 0) return;
+    setConfirmPagoVisible(true);
+  };
 
-    const totalSoles = (deudaTotalCents / 100).toFixed(2);
+  const ejecutarPagoTotal = async () => {
+    if (procesandoRef.current) return;
+    procesandoRef.current = true;
+    setProcesandoPago(true);
 
-    Alert.alert(
-      'Marcar todo como pagado',
-      `¿Confirmar que ${aula} liquidó toda la deuda de S/ ${totalSoles}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar pago',
-          onPress: async () => {
-            try {
-              const ventaIds = unpaidVentas.map((v) => v.id);
-              await marcarComoPagado(db, { ventaIds });
-              loadVentas();
-            } catch (err) {
-              console.error('[AulaDetail] Error al pagar todo:', err);
-              Alert.alert('Error', 'No se pudo liquidar la deuda.');
-            }
-          },
-        },
-      ]
-    );
+    try {
+      const unpaidVentas = ventas.filter((v) => v.estado_pago === 0);
+      const ventaIds = unpaidVentas.map((v) => v.id);
+      await marcarComoPagado(db, { ventaIds });
+      setConfirmPagoVisible(false);
+      await loadVentas();
+    } catch (err) {
+      console.error('[AulaDetail] Error al pagar todo:', err);
+      Alert.alert('Error', 'No se pudo liquidar la deuda.');
+    } finally {
+      setProcesandoPago(false);
+      procesandoRef.current = false;
+    }
   };
 
   const handleVentaLongPress = (venta) => {
@@ -225,7 +228,11 @@ export default function AulaDetailScreen() {
                   item.estado_pago === 1 ? styles.badgeTextPaid : styles.badgeTextUnpaid
                 }
               >
-                {item.estado_pago === 1 ? 'Pagado' : 'Pendiente'}
+                {item.estado_pago === 1
+                  ? 'Pagado'
+                  : item.pagado_cents > 0
+                    ? `Pag. ${(item.pagado_cents / 100).toFixed(2)}`
+                    : 'Pendiente'}
               </CustomText>
             </View>
           </View>
@@ -287,6 +294,18 @@ export default function AulaDetailScreen() {
             <CustomText style={styles.pdfButtonText}>Generar PDF del mes</CustomText>
           )}
         </TouchableOpacity>
+
+        {/* ConfirmModal: Pago total */}
+        <ConfirmModal
+          visible={confirmPagoVisible}
+          title="Confirmar pago"
+          message={`¿Confirmar que ${aula} liquidó toda la deuda de S/ ${(deudaTotalCents / 100).toFixed(2)}?`}
+          confirmText="Sí, pagar todo"
+          confirmStyle="success"
+          isLoading={procesandoPago}
+          onConfirm={ejecutarPagoTotal}
+          onCancel={() => setConfirmPagoVisible(false)}
+        />
 
         {/* FAB: Marcar todo como pagado */}
         {deudasPendientes && (

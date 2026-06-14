@@ -84,6 +84,12 @@ export async function getLoteDetallesSinSync(db) {
 }
 
 /**
+ * Tablas permitidas para marcar como sincronizadas.
+ * Sirve como whitelist para prevenir SQL injection.
+ */
+const TABLAS_SYNC_PERMITIDAS = ['productos', 'ventas'];
+
+/**
  * Marca un lote de registros como sincronizados en la tabla correspondiente.
  * Nota: Dado que detalle_ventas no tiene columna is_synced en el schema físico,
  * si se recibe 'detalle_ventas' no realiza operación de actualización directa en esa tabla.
@@ -96,12 +102,17 @@ export async function getLoteDetallesSinSync(db) {
 export async function marcarSincronizados(db, { tabla, ids }) {
   if (!ids || ids.length === 0) return;
 
-  try {
-    // Si la tabla es detalle_ventas, no hay columna is_synced según el schema.
+  // Validar que la tabla esté en la whitelist para prevenir SQL injection
+  if (!TABLAS_SYNC_PERMITIDAS.includes(tabla)) {
+    // detalle_ventas no tiene columna is_synced según el schema.
     if (tabla === 'detalle_ventas') {
       return;
     }
+    console.warn(`[DB Query] Tabla "${tabla}" no permitida para marcar sincronizados.`);
+    return;
+  }
 
+  try {
     const placeholders = ids.map(() => '?').join(',');
     await db.runAsync(
       `UPDATE ${tabla}

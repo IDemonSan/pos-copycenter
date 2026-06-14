@@ -5,59 +5,100 @@ import {
   StyleSheet,
 } from 'react-native';
 import CustomText from './CustomText';
-import { keyHeight, confirmKeyHeight } from '../utils/responsive';
+import { keyHeight } from '../utils/responsive';
 
 /**
- * NumPad — Teclado numérico estático del POS.
+ * NumPad — Teclado numérico estilo calculadora para el POS.
+ *
+ * Layout:
+ * ┌───┬───┬───┬───┐
+ * │ 7 │ 8 │ 9 │ × │
+ * ├───┼───┼───┼───┤
+ * │ 4 │ 5 │ 6 │ + │
+ * ├───┼───┼───┼───┤
+ * │ 1 │ 2 │ 3 │ ⌫ │
+ * ├───┼───┼───┼───┤
+ * │ C │ 0 │ CONFIRMAR  │
+ * └───┴───┴───────┘
  *
  * Props:
  *   onNumber:    (digit: string) => void
  *   onX:         () => void        — activa modo multiplicación
+ *   onPlus:      () => void        — agrega operador suma a la expresión
  *   onBackspace: () => void
+ *   onClear:     () => void        — limpia todo el buffer
  *   onConfirmar: () => void
- *   confirmDisabled: boolean       — si true, CONFIRMAR aparece opaco e inactivo
- *   isModoMultiplicacion: boolean  — si true, el botón X se resalta
+ *   confirmDisabled: boolean
+ *   isModoMultiplicacion: boolean
  */
 export default function NumPad({
   onNumber,
   onX,
+  onPlus,
   onBackspace,
+  onClear,
   onConfirmar,
   confirmDisabled = false,
   isModoMultiplicacion = false,
 }) {
 
-  // Filas de la grilla numérica
-  const rows = [
-    ['1', '2', '3'],
-    ['4', '5', '6'],
-    ['7', '8', '9'],
-    ['X', '0', '⌫'],
-  ];
-
   const handleKeyPress = (key) => {
-    if (key === 'X')  { onX(); return; }
-    if (key === '⌫') { onBackspace(); return; }
-    onNumber(key);
+    switch (key) {
+      case '×':  onX(); return;
+      case '+':  if (onPlus) onPlus(); return;
+      case '⌫': onBackspace(); return;
+      case 'C':  if (onClear) onClear(); return;
+      case 'CONFIRMAR': onConfirmar(); return;
+      default:   onNumber(key);
+    }
   };
 
   const getKeyStyle = (key) => {
-    const baseStyle = [styles.key, { height: keyHeight }];
-    if (key === '⌫') return [...baseStyle, styles.keyBackspace];
-    if (key === 'X')  return [...baseStyle, isModoMultiplicacion ? styles.keyXActivo : styles.keyX];
-    return baseStyle;
+    const base = [styles.key, { height: keyHeight }];
+    switch (key) {
+      case '×':
+        return [...base, isModoMultiplicacion ? styles.keyOpActivo : styles.keyOp, styles.keyOpX];
+      case '+':
+        return [...base, styles.keyOp, styles.keyOpPlus];
+      case '⌫':
+        return [...base, styles.keyBackspace];
+      case 'C':
+        return [...base, styles.keyClear];
+      case 'CONFIRMAR':
+        return [...base, styles.keyConfirmar, confirmDisabled && styles.keyConfirmarDisabled];
+      default:
+        return base;
+    }
   };
 
   const getKeyTextStyle = (key) => {
-    if (key === '⌫') return [styles.keyText, styles.keyBackspaceText];
-    if (key === 'X')  return [styles.keyText, isModoMultiplicacion ? styles.keyXTextoActivo : styles.keyXTexto];
-    return styles.keyText;
+    switch (key) {
+      case '×':
+        return [styles.keyText, isModoMultiplicacion ? styles.keyOpTextoActivo : styles.keyOpTexto, styles.keyOpXTexto];
+      case '+':
+        return [styles.keyText, styles.keyOpTexto, styles.keyOpPlusTexto];
+      case '⌫':
+        return [styles.keyText, styles.keyBackspaceText];
+      case 'C':
+        return [styles.keyText, styles.keyClearText];
+      case 'CONFIRMAR':
+        return [styles.keyText, styles.keyConfirmarText];
+      default:
+        return styles.keyText;
+    }
   };
+
+  const rows = [
+    ['7', '8', '9', '×'],
+    ['4', '5', '6', '+'],
+    ['1', '2', '3', '⌫'],
+  ];
+
+  const lastRow = ['C', '0', 'CONFIRMAR'];
 
   return (
     <View style={styles.container}>
-
-      {/* Grilla numérica 3×4 */}
+      {/* Filas 1-3: 4 columnas cada una */}
       {rows.map((row, rowIndex) => (
         <View key={rowIndex} style={styles.row}>
           {row.map((key) => (
@@ -73,20 +114,28 @@ export default function NumPad({
         </View>
       ))}
 
-      {/* Botón CONFIRMAR — ancho completo, separado de la grilla */}
-      <TouchableOpacity
-        style={[
-          styles.confirmKey,
-          { height: confirmKeyHeight },
-          confirmDisabled && styles.confirmKeyDisabled,
-        ]}
-        onPress={onConfirmar}
-        disabled={confirmDisabled}
-        activeOpacity={0.8}
-      >
-        <CustomText style={styles.confirmText}>CONFIRMAR  ✔</CustomText>
-      </TouchableOpacity>
-
+      {/* Fila 4: C - 0 - CONFIRMAR (span 2 columnas) */}
+      <View style={styles.row}>
+        {lastRow.map((key) => {
+          const isConfirmar = key === 'CONFIRMAR';
+          return (
+            <TouchableOpacity
+              key={key}
+              style={[
+                getKeyStyle(key),
+                isConfirmar && { flex: 2 },
+              ]}
+              onPress={() => handleKeyPress(key)}
+              disabled={isConfirmar && confirmDisabled}
+              activeOpacity={0.8}
+            >
+              <CustomText style={getKeyTextStyle(key)}>
+                {isConfirmar ? '✔' : key}
+              </CustomText>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -109,7 +158,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-  // ── Tecla genérica ───────────────────────────────────────────────────────
+  // ── Tecla genérica (números) ──────────────────────────────────────────────
   key: {
     flex: 1,
     alignItems: 'center',
@@ -124,49 +173,64 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
 
+  // ── Teclas de operación (×, +) ────────────────────────────────────────────
+  keyOp: {
+    backgroundColor: '#eff6ff',
+  },
+  keyOpX: {
+    // Multiplicar
+  },
+  keyOpPlus: {
+    backgroundColor: '#ecfdf5',
+  },
+  keyOpTexto: {
+    fontWeight: '700',
+    fontSize: 22,
+  },
+  keyOpXTexto: {
+    color: '#2563eb',
+  },
+  keyOpPlusTexto: {
+    color: '#059669',
+  },
+  keyOpActivo: {
+    backgroundColor: '#3b82f6',
+  },
+  keyOpTextoActivo: {
+    color: '#ffffff',
+  },
+
   // ── Tecla backspace (⌫) ──────────────────────────────────────────────────
   keyBackspace: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#fef2f2',
   },
   keyBackspaceText: {
     color: '#dc2626',
     fontSize: 18,
   },
 
-  // ── Tecla X (multiplicar) — inactiva ─────────────────────────────────────
-  keyX: {
-    backgroundColor: '#eff6ff',
+  // ── Tecla clear (C) ──────────────────────────────────────────────────────
+  keyClear: {
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
   },
-  keyXTexto: {
-    color: '#3b82f6',
+  keyClearText: {
+    color: '#4b5563',
     fontWeight: '700',
+    fontSize: 16,
   },
 
-  // ── Tecla X (multiplicar) — activa ───────────────────────────────────────
-  keyXActivo: {
-    backgroundColor: '#3b82f6',
-  },
-  keyXTextoActivo: {
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-
-  // ── Botón CONFIRMAR ───────────────────────────────────────────────────────
-  confirmKey: {
-    width: '100%',
-    borderRadius: 8,
-    marginTop: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
+  // ── Botón CONFIRMAR en grilla ─────────────────────────────────────────────
+  keyConfirmar: {
     backgroundColor: '#22c55e',
   },
-  confirmKeyDisabled: {
+  keyConfirmarDisabled: {
     backgroundColor: '#d1d5db',
   },
-  confirmText: {
-    fontSize: 16,
-    fontWeight: '700',
+  keyConfirmarText: {
     color: '#ffffff',
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    fontSize: 20,
   },
 });

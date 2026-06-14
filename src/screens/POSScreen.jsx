@@ -76,12 +76,14 @@ export default function POSScreen({ route, navigation }) {
     shakeSignal,
     handleNumberPress,
     handleXPress,
+    handlePlusPress,
     handleBackspace,
     agregarAlCarrito,
     agregarAlCarritoConPrecio,
     agregarAlCarritoCustom,
     quitarDelCarrito,
     limpiarCarrito,
+    limpiarBuffer,
     confirmarVenta,
     aulaSeleccionada,
     turnoActivo,
@@ -462,7 +464,9 @@ export default function POSScreen({ route, navigation }) {
             <NumPad
               onNumber={handleNumberPress}
               onX={handleXPress}
+              onPlus={handlePlusPress}
               onBackspace={handleBackspace}
+              onClear={limpiarBuffer}
               onConfirmar={handleConfirmarVentaPress}
               confirmDisabled={carrito.length === 0}
               isModoMultiplicacion={isModoMultiplicacion}
