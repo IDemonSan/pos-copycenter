@@ -11,6 +11,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { getDeudaPorAula } from '../database/queries/reportes';
@@ -230,7 +231,7 @@ export default function SalonesScreen() {
   const totalAulasRegistradas = conDeuda.length;
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={styles.container}>
         {/* Selector de Mes Modal */}
         <Modal
@@ -431,7 +432,7 @@ export default function SalonesScreen() {
           </View>
         </Modal>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

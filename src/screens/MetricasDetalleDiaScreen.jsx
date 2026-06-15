@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { getVentasDelDiaAgrupadas } from '../database/queries/reportes';
@@ -70,7 +71,7 @@ export default function MetricasDetalleDiaScreen() {
   }
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       {/* Encabezado del día */}
       <View style={styles.header}>
         <CustomText style={styles.headerTitle}>{formatearFechaLarga(fecha)}</CustomText>
@@ -160,7 +161,7 @@ export default function MetricasDetalleDiaScreen() {
           ) : null
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

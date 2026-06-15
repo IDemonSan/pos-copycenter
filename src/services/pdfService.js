@@ -169,19 +169,23 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
       const key = det.producto_id || det.producto_nombre;
       if (!grupos[key]) {
         grupos[key] = { ...det };
+        // Normalizar también el primer elemento para que, si tiene
+        // detalle_multiplicador NULL, se use la cantidad como expresión base
+        const expInicial = grupos[key].detalle_multiplicador || `${grupos[key].cantidad}`;
+        grupos[key].detalle_multiplicador = normalizarExpresion(expInicial);
       } else {
         // Fusionar: sumar cantidades y subtotales, concatenar expresiones
         grupos[key].cantidad += det.cantidad;
         grupos[key].subtotal_cents += det.subtotal_cents;
-        // Concatenar y simplificar detalle_multiplicador si existe
+        // Concatenar y simplificar detalle_multiplicador
+        // Si es NULL (registro antiguo), usar la cantidad como expresión base
         // Si mismo multiplicando se repite, se factoriza (ej: "30x3"+"30" → "30x4")
-        if (det.detalle_multiplicador) {
-          if (grupos[key].detalle_multiplicador) {
-            const combinada = grupos[key].detalle_multiplicador + '+' + det.detalle_multiplicador;
-            grupos[key].detalle_multiplicador = normalizarExpresion(combinada);
-          } else {
-            grupos[key].detalle_multiplicador = det.detalle_multiplicador;
-          }
+        const expActual = det.detalle_multiplicador || `${det.cantidad}`;
+        if (grupos[key].detalle_multiplicador) {
+          const combinada = grupos[key].detalle_multiplicador + '+' + expActual;
+          grupos[key].detalle_multiplicador = normalizarExpresion(combinada);
+        } else {
+          grupos[key].detalle_multiplicador = normalizarExpresion(expActual);
         }
       }
     }
@@ -191,7 +195,10 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
 
     for (let i = 0; i < detallesAgrupados.length; i++) {
       const det = detallesAgrupados[i];
-      const cantidadTexto = det.detalle_multiplicador
+      // Mostrar detalle entre paréntesis solo si la expresión no es un simple número
+      // (evita mostrar "15 (15)" para registros antiguos sin detalle_multiplicador)
+      const esExpresionCompuesta = det.detalle_multiplicador && /[x+]/.test(det.detalle_multiplicador);
+      const cantidadTexto = esExpresionCompuesta
         ? `${det.cantidad} (${det.detalle_multiplicador})`
         : `${det.cantidad}`;
 
@@ -257,14 +264,18 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
     `;
   }
 
-  // 5. Armar el HTML definitivo del PDF
+  // 5. Armar el HTML definitivo del PDF con tamaño A4 explícito
   const htmlContent = `
   <!DOCTYPE html>
   <html>
   <head>
     <meta charset="utf-8">
     <style>
-      body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; color: #111827; }
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+      body { font-family: Arial, sans-serif; font-size: 12px; margin: 5px; color: #111827; }
       h1 { font-size: 18px; color: #111827; margin-bottom: 4px; }
       h2 { font-size: 13px; color: #374151; margin-top: 20px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
       table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
@@ -336,7 +347,11 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
   // 6. Generar y abrir Share Sheet
   try {
     const safeAulaName = aula.replace(/[\s°]/g, '_');
-    const { uri } = await Print.printToFileAsync({ html: htmlContent });
+    const { uri } = await Print.printToFileAsync({
+      html: htmlContent,
+      width: 595,  // A4 width in pixels at 72 DPI
+      height: 842, // A4 height in pixels at 72 DPI
+    });
     
     // Mover a un archivo con nombre más amigable
     const newUri = `${FileSystem.cacheDirectory}Liquidacion_${safeAulaName}_${mes}.pdf`;

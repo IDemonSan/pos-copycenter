@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import {
@@ -115,7 +116,7 @@ export default function MetricasScreen() {
   const diffMesColor = diffMes >= 0 ? COLORS.pagadoVerde : COLORS.deudaRojo;
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
 
         {/* ─── COMPARATIVA DIARIA: HOY vs AYER ─── */}
@@ -196,7 +197,7 @@ export default function MetricasScreen() {
         </View>
 
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

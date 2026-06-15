@@ -10,6 +10,7 @@ import {
   ScrollView,
   Switch
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { inicializarSupabase, setAuthErrorState } from '../services/supabaseClient';
@@ -95,17 +96,17 @@ export default function SupabaseConfigScreen() {
 
   if (loading) {
     return (
-      <View style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#3b82f6" />
           <CustomText style={styles.loadingText}>Cargando credenciales...</CustomText>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
           <CustomText style={styles.title}>Conexión con la Nube</CustomText>
@@ -196,7 +197,7 @@ export default function SupabaseConfigScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

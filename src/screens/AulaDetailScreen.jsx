@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { anularVenta, marcarComoPagado } from '../database/queries/ventas';
@@ -258,7 +259,7 @@ export default function AulaDetailScreen() {
   const deudasPendientes = ventas.some((v) => v.estado_pago === 0);
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={styles.container}>
         {/* Header info */}
         <View style={styles.infoBlock}>
@@ -318,7 +319,7 @@ export default function AulaDetailScreen() {
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

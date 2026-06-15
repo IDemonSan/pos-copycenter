@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { insertarProducto, actualizarProducto } from '../database/queries/productos';
@@ -157,7 +158,7 @@ export default function ProductoEditScreen() {
   const showPriceWarning = isEditing && !isVariable && !isCustom && precio !== precioInicial && precio !== '';
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.container}>
         <CustomText style={styles.label}>Nombre del producto *</CustomText>
         <TextInput
@@ -239,7 +240,7 @@ export default function ProductoEditScreen() {
           </TouchableOpacity>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

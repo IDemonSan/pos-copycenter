@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { useSync } from '../context/SyncContext';
@@ -180,7 +181,7 @@ export default function ProductosListScreen() {
   }
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <FlatList
         data={productos}
         keyExtractor={(item) => item.id}
@@ -204,7 +205,7 @@ export default function ProductosListScreen() {
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

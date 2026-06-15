@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { getVentasPorDiaDelMes } from '../database/queries/reportes';
@@ -109,7 +110,7 @@ export default function MetricasDetalleDiasScreen() {
   }
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       {/* Modal selector de mes */}
       <Modal
         visible={showMonthModal}
@@ -177,7 +178,7 @@ export default function MetricasDetalleDiasScreen() {
           ) : null
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

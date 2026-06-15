@@ -9,6 +9,7 @@ import {
   Alert,
   Switch
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { subirDatosPendientes, descargarDatosNube } from '../services/syncService';
@@ -165,7 +166,7 @@ export default function ConfigScreen() {
   }
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* SECCIÓN 1: AJUSTES GENERALES */}
         <View style={styles.sectionCard}>
@@ -314,7 +315,7 @@ export default function ConfigScreen() {
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

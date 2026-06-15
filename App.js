@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, Platform, AppState } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { DbProvider, useDb } from './src/context/DbContext';
 import { VentaProvider } from './src/context/VentaContext';
@@ -103,7 +104,8 @@ function AppContent() {
 
 export default function App() {
   return (
-    <DbProvider>
+    <SafeAreaProvider>
+      <DbProvider>
       <AuthProvider>
         <SyncProvider>
           <ConfigProvider>
@@ -112,6 +114,7 @@ export default function App() {
         </SyncProvider>
       </AuthProvider>
     </DbProvider>
+    </SafeAreaProvider>
   );
 }
 

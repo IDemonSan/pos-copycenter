@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { getVentasPorMesDelAnio } from '../database/queries/reportes';
@@ -116,7 +117,7 @@ export default function MetricasDetalleMesesScreen() {
   }
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       {/* Modal selector de año */}
       <Modal
         visible={showYearModal}
@@ -192,7 +193,7 @@ export default function MetricasDetalleMesesScreen() {
           )
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -25,8 +25,6 @@ import ReconnectBanner from '../components/ReconnectBanner';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-
-
 // Opciones de header comunes con el SyncStatusIcon
 const defaultStackOptions = {
   headerStyle: {

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { useDb } from '../context/DbContext';
@@ -166,7 +167,7 @@ export default function MediosPagoScreen() {
   };
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={styles.container}>
         {/* Formulario */}
         <View style={styles.formCard}>
@@ -245,7 +246,7 @@ export default function MediosPagoScreen() {
           )}
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

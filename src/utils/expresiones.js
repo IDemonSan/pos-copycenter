@@ -170,6 +170,9 @@ export function normalizarExpresion(exprStr) {
   const partes = Object.entries(grupos)
     .sort(([a], [b]) => parseInt(b, 10) - parseInt(a, 10)) // de mayor a menor
     .map(([multiplicando, sumaMultiplicadores]) => {
+      if (sumaMultiplicadores === 1) {
+        return `${multiplicando}`;
+      }
       return `${multiplicando}x${sumaMultiplicadores}`;
     });
 

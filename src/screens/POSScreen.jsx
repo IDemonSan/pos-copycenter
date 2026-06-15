@@ -10,6 +10,7 @@ import {
   Dimensions,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDb } from '../context/DbContext';
@@ -369,7 +370,7 @@ export default function POSScreen({ route, navigation }) {
   const dynamicProductsHeight = getDynamicProductsSectionHeight(productos.length);
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={styles.container}>
         
         {/* SECCIÓN SUPERIOR (Filtros y Metadatos) - Altura intrínseca */}
@@ -603,7 +604,7 @@ export default function POSScreen({ route, navigation }) {
           </View>
         </Modal>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
