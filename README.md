@@ -11,8 +11,6 @@
 
 ## 📸 Pantallazos
 
-> *Agrega aquí las capturas de pantalla de la aplicación para mostrar el impacto visual del proyecto.*
-
 | | | |
 |:---:|:---:|:---:|
 | **Pantalla de inicio**<br/><img src="assets/screenshots/home.png" alt="Home" width="200"/> | **Nueva Venta (POS)**<br/><img src="assets/screenshots/pos.png" alt="POS" width="200"/> | **Deudas por Aula**<br/><img src="assets/screenshots/salones.png" alt="Salones" width="200"/> |
