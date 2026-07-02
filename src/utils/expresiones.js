@@ -40,11 +40,12 @@ function parsearTermino(termStr) {
  */
 export function parsearTerminos(exprStr) {
   if (!exprStr) return [];
-  return exprStr.split('+')
-    .map(t => t.trim())
-    .filter(t => t.length > 0)
-    .map(t => parsearTermino(t))
-    .filter(t => t !== null);
+  return exprStr
+    .split('+')
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0)
+    .map((t) => parsearTermino(t))
+    .filter((t) => t !== null);
 }
 
 /**
@@ -72,9 +73,7 @@ export function terminoAString(term) {
  */
 export function calcularTotalTerminos(terminos) {
   return terminos.reduce((total, t) => {
-    return total + (t.multiplicador != null
-      ? t.multiplicando * t.multiplicador
-      : t.multiplicando);
+    return total + (t.multiplicador != null ? t.multiplicando * t.multiplicador : t.multiplicando);
   }, 0);
 }
 
@@ -112,9 +111,7 @@ export function simplificarExpresion(exprA, exprB) {
 
   // Verificar si todos los términos tienen el mismo multiplicando
   const primerMultiplicando = todosLosTerminos[0].multiplicando;
-  const todosIguales = todosLosTerminos.every(
-    t => t.multiplicando === primerMultiplicando
-  );
+  const todosIguales = todosLosTerminos.every((t) => t.multiplicando === primerMultiplicando);
 
   if (todosIguales) {
     // Simplificar: sumar todos los multiplicadores (tratando null como 1)
@@ -129,8 +126,8 @@ export function simplificarExpresion(exprA, exprB) {
 
   // No se puede simplificar → concatenar normal (filtrando arrays vacíos)
   const partes = [];
-  if (terminosA.length) partes.push(terminosA.map(t => terminoAString(t)).join('+'));
-  if (terminosB.length) partes.push(terminosB.map(t => terminoAString(t)).join('+'));
+  if (terminosA.length) partes.push(terminosA.map((t) => terminoAString(t)).join('+'));
+  if (terminosB.length) partes.push(terminosB.map((t) => terminoAString(t)).join('+'));
   const exprStr = partes.join('+');
 
   return { expresion: exprStr, total };

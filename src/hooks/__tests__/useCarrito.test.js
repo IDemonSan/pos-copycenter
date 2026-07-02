@@ -19,10 +19,7 @@ jest.mock('../../services/syncWorker', () => ({
 }));
 
 const { insertarVenta } = require('../../database/queries/ventas');
-const {
-  hapticProductoAgregado,
-  hapticBufferVacio,
-} = require('../../services/hapticService');
+const { hapticProductoAgregado, hapticBufferVacio } = require('../../services/hapticService');
 
 // ───── Helpers ─────────────────────────────────────────────────────────────
 

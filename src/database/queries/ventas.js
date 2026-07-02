@@ -41,8 +41,8 @@ export async function insertarVenta(db, { venta, detalles }) {
           venta.anulado_at ?? null,
           venta.motivo_anulacion ?? null,
           venta.is_synced ?? 0,
-          venta.updated_at
-        ]
+          venta.updated_at,
+        ],
       );
 
       // 2. Insertar detalles
@@ -59,8 +59,8 @@ export async function insertarVenta(db, { venta, detalles }) {
             det.cantidad,
             det.precio_unitario_cents,
             det.subtotal_cents,
-            det.detalle_multiplicador ?? null
-          ]
+            det.detalle_multiplicador ?? null,
+          ],
         );
       }
     });
@@ -86,7 +86,7 @@ export async function getVentasPorAula(db, { aula, mes }) {
          AND strftime('%Y-%m', fecha_venta) = ?
          AND anulado_at IS NULL
        ORDER BY fecha_venta DESC, fecha_registro DESC;`,
-      [aula, mes]
+      [aula, mes],
     );
   } catch (error) {
     console.error('[DB Query] Error en getVentasPorAula:', error);
@@ -112,7 +112,7 @@ export async function anularVenta(db, { id, motivo }) {
            is_synced = 0,
            updated_at = ?
        WHERE id = ?;`,
-      [now, motivo, now, id]
+      [now, motivo, now, id],
     );
   } catch (error) {
     console.error('[DB Query] Error al anular venta:', error);
@@ -147,7 +147,7 @@ export async function marcarComoPagado(db, { ventaIds, montoCents }) {
                  is_synced = 0,
                  updated_at = ?
              WHERE id = ?;`,
-            [now, id]
+            [now, id],
           );
         }
       } else {
@@ -158,7 +158,7 @@ export async function marcarComoPagado(db, { ventaIds, montoCents }) {
            WHERE id IN (${ventaIds.map(() => '?').join(',')})
              AND total_cents > COALESCE(pagado_cents, 0)
            ORDER BY fecha_venta ASC, fecha_registro ASC;`,
-          ventaIds
+          ventaIds,
         );
 
         let remaining = montoCents;
@@ -178,7 +178,7 @@ export async function marcarComoPagado(db, { ventaIds, montoCents }) {
                  is_synced = 0,
                  updated_at = ?
              WHERE id = ?;`,
-            [nuevoPagado, estaPagada ? 1 : 0, now, venta.id]
+            [nuevoPagado, estaPagada ? 1 : 0, now, venta.id],
           );
 
           remaining -= abono;
@@ -199,10 +199,7 @@ export async function marcarComoPagado(db, { ventaIds, montoCents }) {
  */
 export async function getDetalleVenta(db, ventaId) {
   try {
-    return await db.getAllAsync(
-      `SELECT * FROM detalle_ventas WHERE venta_id = ?;`,
-      [ventaId]
-    );
+    return await db.getAllAsync(`SELECT * FROM detalle_ventas WHERE venta_id = ?;`, [ventaId]);
   } catch (error) {
     console.error('[DB Query] Error en getDetalleVenta:', error);
     throw error;
@@ -217,10 +214,7 @@ export async function getDetalleVenta(db, ventaId) {
  */
 export async function getVentasSinSync(db, limit = 100) {
   try {
-    return await db.getAllAsync(
-      `SELECT * FROM ventas WHERE is_synced = 0 LIMIT ?;`,
-      [limit]
-    );
+    return await db.getAllAsync(`SELECT * FROM ventas WHERE is_synced = 0 LIMIT ?;`, [limit]);
   } catch (error) {
     console.error('[DB Query] Error en getVentasSinSync:', error);
     throw error;

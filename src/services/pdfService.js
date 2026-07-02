@@ -7,13 +7,21 @@ import { getDetalleVenta } from '../database/queries/ventas';
 import { normalizarExpresion } from '../utils/expresiones';
 
 const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
-const DIAS = [
-  'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'
-];
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 function formatLongDate() {
   const date = new Date();
@@ -38,7 +46,20 @@ function formatReadableDate(dateString) {
   try {
     const date = new Date(dateString + 'T12:00:00');
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
   } catch (e) {
     return dateString;
@@ -68,10 +89,10 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes, navigation }
   try {
     // 1. Consultar medios de pago
     const medios = await db.getAllAsync('SELECT * FROM medios_pago ORDER BY id ASC;');
-    
+
     // 2. Consultar AsyncStorage
     const omitirAdvertencia = await AsyncStorage.getItem('@config_omitir_advertencia_qr');
-    
+
     if (medios.length === 0 && omitirAdvertencia !== 'true') {
       // Detener y disparar alerta
       Alert.alert(
@@ -84,22 +105,22 @@ export async function generarPDFLiquidacion(db, { aula, turno, mes, navigation }
               if (navigation) {
                 navigation.navigate('ConfigTab', { screen: 'MediosPago' });
               }
-            }
+            },
           },
           {
             text: 'Sí',
             onPress: () => {
               ejecutarGeneracionPDF(db, { aula, turno, mes, medios: [] });
-            }
+            },
           },
           {
             text: 'Sí y no volver a preguntar',
             onPress: async () => {
               await AsyncStorage.setItem('@config_omitir_advertencia_qr', 'true');
               ejecutarGeneracionPDF(db, { aula, turno, mes, medios: [] });
-            }
-          }
-        ]
+            },
+          },
+        ],
       );
       return;
     }
@@ -128,11 +149,14 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
     `SELECT * FROM ventas
      WHERE aula = ? AND strftime('%Y-%m', fecha_venta) = ? AND anulado_at IS NULL
      ORDER BY fecha_venta ASC, fecha_registro ASC;`,
-    [aula, mes]
+    [aula, mes],
   );
 
   if (ventas.length === 0) {
-    Alert.alert('Sin datos', 'No existen consumos registrados para generar el reporte de este período.');
+    Alert.alert(
+      'Sin datos',
+      'No existen consumos registrados para generar el reporte de este período.',
+    );
     return;
   }
 
@@ -149,7 +173,7 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
 
     const detalles = await getDetalleVenta(db, sale.id);
     const readableDate = formatReadableDate(sale.fecha_venta);
-    
+
     if (!ventasPorFecha[readableDate]) {
       ventasPorFecha[readableDate] = [];
     }
@@ -162,7 +186,7 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
 
   for (const fecha of fechasOrdenadas) {
     const detalles = ventasPorFecha[fecha];
-    
+
     // Agrupar detalles por producto_id para fusionar mismo producto
     const grupos = {};
     for (const det of detalles) {
@@ -197,7 +221,8 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
       const det = detallesAgrupados[i];
       // Mostrar detalle entre paréntesis solo si la expresión no es un simple número
       // (evita mostrar "15 (15)" para registros antiguos sin detalle_multiplicador)
-      const esExpresionCompuesta = det.detalle_multiplicador && /[x+]/.test(det.detalle_multiplicador);
+      const esExpresionCompuesta =
+        det.detalle_multiplicador && /[x+]/.test(det.detalle_multiplicador);
       const cantidadTexto = esExpresionCompuesta
         ? `${det.cantidad} (${det.detalle_multiplicador})`
         : `${det.cantidad}`;
@@ -205,7 +230,7 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
       filasHTML += `
         <tr>
       `;
-      
+
       if (i === 0) {
         filasHTML += `
           <td rowspan="${rowspan}" style="vertical-align: middle; font-weight: bold; background-color: #fafafa; border-right: 1px solid #e5e7eb; text-align: center;">
@@ -228,7 +253,7 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
   const totalFormateado = (totalCents / 100).toFixed(2);
   const montoPendienteFormateado = (pendienteCents / 100).toFixed(2);
 
-// 4. Inclusión dinámica de QRs de pago
+  // 4. Inclusión dinámica de QRs de pago
   let qrHTML = '';
   if (medios && medios.length > 0) {
     qrHTML += `
@@ -236,7 +261,7 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
         <h2 style="font-size: 14px; margin-bottom: 12px; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">Medios de Pago</h2>
         <div class="qr-container" style="width: 100%; text-align: left;">
     `;
-    
+
     for (const medio of medios) {
       const base64Img = await getLocalFileBase64(medio.qr_image_path);
       if (base64Img) {
@@ -256,7 +281,7 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
         `;
       }
     }
-    
+
     qrHTML += `
           <div style="clear: both;"></div>
         </div>
@@ -338,7 +363,7 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
  
     <!-- FOOTER -->
     <div class="footer">
-      Documento generado automáticamente por el Sistema de Control de Copias del Colegio
+      Documento generado automáticamente por el Sistema de Control de Copias de CopyCenter Flor
     </div>
   </body>
   </html>
@@ -349,15 +374,15 @@ async function ejecutarGeneracionPDF(db, { aula, turno, mes, medios }) {
     const safeAulaName = aula.replace(/[\s°]/g, '_');
     const { uri } = await Print.printToFileAsync({
       html: htmlContent,
-      width: 595,  // A4 width in pixels at 72 DPI
+      width: 595, // A4 width in pixels at 72 DPI
       height: 842, // A4 height in pixels at 72 DPI
     });
-    
+
     // Mover a un archivo con nombre más amigable
     const newUri = `${FileSystem.cacheDirectory}Liquidacion_${safeAulaName}_${mes}.pdf`;
     await FileSystem.moveAsync({
       from: uri,
-      to: newUri
+      to: newUri,
     });
 
     await Sharing.shareAsync(newUri, {

@@ -13,7 +13,7 @@ export default function SyncStatusIcon() {
 
   const handlePress = async () => {
     if (isSyncing) return;
-    
+
     await ejecutarSincronizacion();
 
     if (authErrorState !== 'credentials_error') {
@@ -44,21 +44,15 @@ export default function SyncStatusIcon() {
   }
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      activeOpacity={0.7}
-      onPress={handlePress}
-    >
+    <TouchableOpacity style={styles.container} activeOpacity={0.7} onPress={handlePress}>
       <Ionicons
-        name={hasAuthError ? 'cloud-offline' : (isPending ? 'cloud' : 'cloud-outline')}
+        name={hasAuthError ? 'cloud-offline' : isPending ? 'cloud' : 'cloud-outline'}
         size={24}
-        color={hasAuthError ? '#ef4444' : (isPending ? '#ea580c' : '#9ca3af')}
+        color={hasAuthError ? '#ef4444' : isPending ? '#ea580c' : '#9ca3af'}
       />
       {isPending && !hasAuthError && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>
-            {pendientesCount > 99 ? '99+' : pendientesCount}
-          </Text>
+          <Text style={styles.badgeText}>{pendientesCount > 99 ? '99+' : pendientesCount}</Text>
         </View>
       )}
     </TouchableOpacity>

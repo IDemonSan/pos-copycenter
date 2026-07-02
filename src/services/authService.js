@@ -36,7 +36,9 @@ export async function reauthenticate() {
     const password = await SecureStore.getItemAsync('supabase_user_password');
 
     if (!email || !password) {
-      console.warn('[Auth] Credenciales de autenticación incompletas en SecureStore. Sincronización inactiva.');
+      console.warn(
+        '[Auth] Credenciales de autenticación incompletas en SecureStore. Sincronización inactiva.',
+      );
       sessionActiva = false;
       return false;
     }
@@ -49,12 +51,12 @@ export async function reauthenticate() {
     if (error) {
       console.warn('[Auth] Login fallido — modo offline completo:', error.message);
       sessionActiva = false;
-      if (error.status === 400 || error.message.includes("Invalid login credentials")) {
+      if (error.status === 400 || error.message.includes('Invalid login credentials')) {
         setAuthErrorState('credentials_error');
         Alert.alert(
-          "Error de Conexión a la Nube",
-          "Las credenciales ingresadas no apuntan a ningún usuario válido en Supabase. Revisa el correo y la contraseña en Configuración.",
-          [{ text: "OK" }]
+          'Error de Conexión a la Nube',
+          'Las credenciales ingresadas no apuntan a ningún usuario válido en Supabase. Revisa el correo y la contraseña en Configuración.',
+          [{ text: 'OK' }],
         );
       } else {
         setAuthErrorState('network_error');
@@ -82,7 +84,9 @@ export async function initSession() {
     return;
   }
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session) {
       sessionActiva = true;
     } else {
@@ -129,20 +133,25 @@ export function AuthProvider({ children }) {
     }
 
     // Sincronizar el estado de React con la suscripción de Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       const active = !!session;
       setSessionActivaState(active);
       sessionActiva = active;
     });
 
     // Cargar sesión inicial
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const active = !!session;
-      setSessionActivaState(active);
-      sessionActiva = active;
-    }).catch(err => {
-      console.warn('[Auth Provider] Error al leer sesión inicial:', err);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        const active = !!session;
+        setSessionActivaState(active);
+        sessionActiva = active;
+      })
+      .catch((err) => {
+        console.warn('[Auth Provider] Error al leer sesión inicial:', err);
+      });
 
     return () => {
       subscription?.unsubscribe();

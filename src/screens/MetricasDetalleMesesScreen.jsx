@@ -15,8 +15,18 @@ import { getVentasPorMesDelAnio } from '../database/queries/reportes';
 import COLORS from '../constants/colors';
 
 const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
 function getNombreMes(mesStr) {
@@ -139,13 +149,21 @@ export default function MetricasDetalleMesesScreen() {
                     setShowYearModal(false);
                   }}
                 >
-                  <CustomText style={[styles.modalOptionText, esSeleccionado && styles.modalOptionTextSelected]}>
+                  <CustomText
+                    style={[
+                      styles.modalOptionText,
+                      esSeleccionado && styles.modalOptionTextSelected,
+                    ]}
+                  >
                     {a}
                   </CustomText>
                 </TouchableOpacity>
               );
             })}
-            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowYearModal(false)}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowYearModal(false)}
+            >
               <CustomText style={styles.modalCloseButtonText}>Cancelar</CustomText>
             </TouchableOpacity>
           </View>
@@ -169,7 +187,7 @@ export default function MetricasDetalleMesesScreen() {
                     S/ {(item.total_cents / 100).toFixed(2)}
                   </CustomText>
                   <CustomText style={styles.mesPedidos}>
-                    {item.pedidos} pedido{(item.pedidos !== 1) ? 's' : ''}
+                    {item.pedidos} pedido{item.pedidos !== 1 ? 's' : ''}
                   </CustomText>
                 </>
               ) : (

@@ -8,7 +8,7 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
-  Alert
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,7 +18,7 @@ import COLORS from '../constants/colors';
 
 export default function MediosPagoScreen() {
   const { db } = useDb();
-  
+
   const [loading, setLoading] = useState(true);
   const [medios, setMedios] = useState([]);
   const [bancoNombre, setBancoNombre] = useState('');
@@ -70,7 +70,10 @@ export default function MediosPagoScreen() {
 
   const handleAgregarMedio = async () => {
     if (!bancoNombre.trim()) {
-      Alert.alert('Campo requerido', 'Por favor ingresa el nombre del banco o aplicación (ej: Yape, Plin, BCP).');
+      Alert.alert(
+        'Campo requerido',
+        'Por favor ingresa el nombre del banco o aplicación (ej: Yape, Plin, BCP).',
+      );
       return;
     }
     if (!selectedImage) {
@@ -83,7 +86,7 @@ export default function MediosPagoScreen() {
       // 1. Copiar imagen al directorio privado de la app
       const nombreArchivo = `qr_${Date.now()}.jpg`;
       const destinoFinal = `${FileSystem.documentDirectory}${nombreArchivo}`;
-      
+
       await FileSystem.copyAsync({
         from: selectedImage,
         to: destinoFinal,
@@ -92,16 +95,16 @@ export default function MediosPagoScreen() {
       // 2. Insertar en la BD
       await db.runAsync(
         'INSERT INTO medios_pago (banco_nombre, qr_image_path, descripcion) VALUES (?, ?, ?);',
-        [bancoNombre.trim(), destinoFinal, descripcion.trim()]
+        [bancoNombre.trim(), destinoFinal, descripcion.trim()],
       );
 
       Alert.alert('Éxito', 'Medio de pago agregado correctamente.');
-      
+
       // Limpiar campos
       setBancoNombre('');
       setDescripcion('');
       setSelectedImage(null);
-      
+
       // Recargar lista
       await loadMedios();
     } catch (error) {
@@ -139,7 +142,7 @@ export default function MediosPagoScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -172,7 +175,7 @@ export default function MediosPagoScreen() {
         {/* Formulario */}
         <View style={styles.formCard}>
           <CustomText style={styles.formTitle}>Nuevo Medio de Pago</CustomText>
-          
+
           <TextInput
             style={styles.input}
             placeholder="Nombre del banco o app (ej: Yape, Plin)"
@@ -180,7 +183,7 @@ export default function MediosPagoScreen() {
             onChangeText={setBancoNombre}
             placeholderTextColor="#9ca3af"
           />
-          
+
           <TextInput
             style={[styles.input, styles.descInput]}
             placeholder="Descripción (ej: Titular, nro de cuenta o celular)"
@@ -203,7 +206,7 @@ export default function MediosPagoScreen() {
                 <CustomText style={styles.pickerBtnText}>📷 Seleccionar Código QR</CustomText>
               )}
             </TouchableOpacity>
-            
+
             {selectedImage ? (
               <TouchableOpacity
                 style={styles.clearImageBtn}

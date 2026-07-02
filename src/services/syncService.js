@@ -28,17 +28,15 @@ export async function subirDatosPendientes(db) {
       hayMasProds = false;
       break;
     }
-    const loteConSync = lote.map(r => ({ ...r, is_synced: 1 }));
-    const { error } = await supabase
-      .from('productos')
-      .upsert(loteConSync, { onConflict: 'id' });
+    const loteConSync = lote.map((r) => ({ ...r, is_synced: 1 }));
+    const { error } = await supabase.from('productos').upsert(loteConSync, { onConflict: 'id' });
 
     if (error) {
       console.error('[SyncService] Error al subir lote productos:', error.message);
       throw error;
     }
 
-    const ids = lote.map(r => r.id);
+    const ids = lote.map((r) => r.id);
     await marcarSincronizados(db, { tabla: 'productos', ids });
     countProductos += lote.length;
 
@@ -55,7 +53,7 @@ export async function subirDatosPendientes(db) {
     }
 
     // A. Subir cabeceras
-    const ventasConSync = ventasLote.map(v => ({ ...v, is_synced: 1 }));
+    const ventasConSync = ventasLote.map((v) => ({ ...v, is_synced: 1 }));
     const { error: ventasError } = await supabase
       .from('ventas')
       .upsert(ventasConSync, { onConflict: 'id' });
@@ -66,11 +64,11 @@ export async function subirDatosPendientes(db) {
     }
 
     // B. Obtener detalles para este lote
-    const ventaIds = ventasLote.map(v => v.id);
+    const ventaIds = ventasLote.map((v) => v.id);
     const placeholders = ventaIds.map(() => '?').join(',');
     const detallesLote = await db.getAllAsync(
       `SELECT * FROM detalle_ventas WHERE venta_id IN (${placeholders});`,
-      ventaIds
+      ventaIds,
     );
 
     if (detallesLote.length > 0) {
@@ -113,24 +111,41 @@ export async function descargarDatosNube(db) {
   const { data: ventasNube, error: errorVentas } = await supabase.from('ventas').select('*');
   if (errorVentas) throw errorVentas;
 
-  const { data: detallesNube, error: errorDetalles } = await supabase.from('detalle_ventas').select('*');
+  const { data: detallesNube, error: errorDetalles } = await supabase
+    .from('detalle_ventas')
+    .select('*');
   if (errorDetalles) throw errorDetalles;
 
-  let insertadosProd = 0, actualizadosProd = 0;
-  let insertadosVenta = 0, actualizadosVenta = 0;
-  let insertadosDet = 0, actualizadosDet = 0;
+  let insertadosProd = 0,
+    actualizadosProd = 0;
+  let insertadosVenta = 0,
+    actualizadosVenta = 0;
+  let insertadosDet = 0,
+    actualizadosDet = 0;
 
   // 2. Transacción de integración en SQLite
   await db.execAsync('BEGIN TRANSACTION;');
   try {
     // A. Integración de Productos
-    for (const p of (prodsNube || [])) {
-      const localProd = await db.getFirstAsync("SELECT id, updated_at FROM productos WHERE id = ?;", [p.id]);
+    for (const p of prodsNube || []) {
+      const localProd = await db.getFirstAsync(
+        'SELECT id, updated_at FROM productos WHERE id = ?;',
+        [p.id],
+      );
       if (!localProd) {
         await db.runAsync(
           `INSERT INTO productos (id, nombre, precio_cents, is_variable, is_custom, orden_prioridad, activo, is_synced, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?);`,
-          [p.id, p.nombre, p.precio_cents, p.is_variable, p.is_custom, p.orden_prioridad, p.activo, p.updated_at]
+          [
+            p.id,
+            p.nombre,
+            p.precio_cents,
+            p.is_variable,
+            p.is_custom,
+            p.orden_prioridad,
+            p.activo,
+            p.updated_at,
+          ],
         );
         insertadosProd++;
       } else {
@@ -139,7 +154,16 @@ export async function descargarDatosNube(db) {
             `UPDATE productos
              SET nombre = ?, precio_cents = ?, is_variable = ?, is_custom = ?, orden_prioridad = ?, activo = ?, is_synced = 1, updated_at = ?
              WHERE id = ?;`,
-            [p.nombre, p.precio_cents, p.is_variable, p.is_custom, p.orden_prioridad, p.activo, p.updated_at, p.id]
+            [
+              p.nombre,
+              p.precio_cents,
+              p.is_variable,
+              p.is_custom,
+              p.orden_prioridad,
+              p.activo,
+              p.updated_at,
+              p.id,
+            ],
           );
           actualizadosProd++;
         }
@@ -147,13 +171,26 @@ export async function descargarDatosNube(db) {
     }
 
     // B. Integración de Ventas
-    for (const v of (ventasNube || [])) {
-      const localVenta = await db.getFirstAsync("SELECT id, updated_at FROM ventas WHERE id = ?;", [v.id]);
+    for (const v of ventasNube || []) {
+      const localVenta = await db.getFirstAsync('SELECT id, updated_at FROM ventas WHERE id = ?;', [
+        v.id,
+      ]);
       if (!localVenta) {
         await db.runAsync(
           `INSERT INTO ventas (id, fecha_venta, fecha_registro, turno, aula, total_cents, estado_pago, anulado_at, motivo_anulacion, is_synced, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?);`,
-          [v.id, v.fecha_venta, v.fecha_registro, v.turno, v.aula, v.total_cents, v.estado_pago, v.anulado_at, v.motivo_anulacion, v.updated_at]
+          [
+            v.id,
+            v.fecha_venta,
+            v.fecha_registro,
+            v.turno,
+            v.aula,
+            v.total_cents,
+            v.estado_pago,
+            v.anulado_at,
+            v.motivo_anulacion,
+            v.updated_at,
+          ],
         );
         insertadosVenta++;
       } else {
@@ -162,7 +199,18 @@ export async function descargarDatosNube(db) {
             `UPDATE ventas
              SET fecha_venta = ?, fecha_registro = ?, turno = ?, aula = ?, total_cents = ?, estado_pago = ?, anulado_at = ?, motivo_anulacion = ?, is_synced = 1, updated_at = ?
              WHERE id = ?;`,
-            [v.fecha_venta, v.fecha_registro, v.turno, v.aula, v.total_cents, v.estado_pago, v.anulado_at, v.motivo_anulacion, v.updated_at, v.id]
+            [
+              v.fecha_venta,
+              v.fecha_registro,
+              v.turno,
+              v.aula,
+              v.total_cents,
+              v.estado_pago,
+              v.anulado_at,
+              v.motivo_anulacion,
+              v.updated_at,
+              v.id,
+            ],
           );
           actualizadosVenta++;
         }
@@ -170,13 +218,24 @@ export async function descargarDatosNube(db) {
     }
 
     // C. Integración de Detalle Ventas
-    for (const d of (detallesNube || [])) {
-      const localDetalle = await db.getFirstAsync("SELECT id FROM detalle_ventas WHERE id = ?;", [d.id]);
+    for (const d of detallesNube || []) {
+      const localDetalle = await db.getFirstAsync('SELECT id FROM detalle_ventas WHERE id = ?;', [
+        d.id,
+      ]);
       if (!localDetalle) {
         await db.runAsync(
           `INSERT INTO detalle_ventas (id, venta_id, producto_id, producto_nombre, cantidad, precio_unitario_cents, subtotal_cents, detalle_multiplicador)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
-          [d.id, d.venta_id, d.producto_id, d.producto_nombre, d.cantidad, d.precio_unitario_cents, d.subtotal_cents, d.detalle_multiplicador]
+          [
+            d.id,
+            d.venta_id,
+            d.producto_id,
+            d.producto_nombre,
+            d.cantidad,
+            d.precio_unitario_cents,
+            d.subtotal_cents,
+            d.detalle_multiplicador,
+          ],
         );
         insertadosDet++;
       } else {
@@ -184,7 +243,16 @@ export async function descargarDatosNube(db) {
           `UPDATE detalle_ventas
            SET venta_id = ?, producto_id = ?, producto_nombre = ?, cantidad = ?, precio_unitario_cents = ?, subtotal_cents = ?, detalle_multiplicador = ?
            WHERE id = ?;`,
-          [d.venta_id, d.producto_id, d.producto_nombre, d.cantidad, d.precio_unitario_cents, d.subtotal_cents, d.detalle_multiplicador, d.id]
+          [
+            d.venta_id,
+            d.producto_id,
+            d.producto_nombre,
+            d.cantidad,
+            d.precio_unitario_cents,
+            d.subtotal_cents,
+            d.detalle_multiplicador,
+            d.id,
+          ],
         );
         actualizadosDet++;
       }

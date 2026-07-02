@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import CustomText from './CustomText';
 import { keyHeight } from '../utils/responsive';
 
@@ -41,15 +37,25 @@ export default function NumPad({
   confirmDisabled = false,
   isModoMultiplicacion = false,
 }) {
-
   const handleKeyPress = (key) => {
     switch (key) {
-      case '×':  onX(); return;
-      case '+':  if (onPlus) onPlus(); return;
-      case '⌫': onBackspace(); return;
-      case 'C':  if (onClear) onClear(); return;
-      case 'CONFIRMAR': onConfirmar(); return;
-      default:   onNumber(key);
+      case '×':
+        onX();
+        return;
+      case '+':
+        if (onPlus) onPlus();
+        return;
+      case '⌫':
+        onBackspace();
+        return;
+      case 'C':
+        if (onClear) onClear();
+        return;
+      case 'CONFIRMAR':
+        onConfirmar();
+        return;
+      default:
+        onNumber(key);
     }
   };
 
@@ -74,7 +80,11 @@ export default function NumPad({
   const getKeyTextStyle = (key) => {
     switch (key) {
       case '×':
-        return [styles.keyText, isModoMultiplicacion ? styles.keyOpTextoActivo : styles.keyOpTexto, styles.keyOpXTexto];
+        return [
+          styles.keyText,
+          isModoMultiplicacion ? styles.keyOpTextoActivo : styles.keyOpTexto,
+          styles.keyOpXTexto,
+        ];
       case '+':
         return [styles.keyText, styles.keyOpTexto, styles.keyOpPlusTexto];
       case '⌫':
@@ -121,17 +131,12 @@ export default function NumPad({
           return (
             <TouchableOpacity
               key={key}
-              style={[
-                getKeyStyle(key),
-                isConfirmar && { flex: 2 },
-              ]}
+              style={[getKeyStyle(key), isConfirmar && { flex: 2 }]}
               onPress={() => handleKeyPress(key)}
               disabled={isConfirmar && confirmDisabled}
               activeOpacity={0.8}
             >
-              <CustomText style={getKeyTextStyle(key)}>
-                {isConfirmar ? '✔' : key}
-              </CustomText>
+              <CustomText style={getKeyTextStyle(key)}>{isConfirmar ? '✔' : key}</CustomText>
             </TouchableOpacity>
           );
         })}

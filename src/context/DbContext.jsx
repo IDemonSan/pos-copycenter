@@ -35,13 +35,13 @@ function DbProviderInner({ children }) {
 
         // 1. Crear esquema si no existe
         await createSchema(db);
-        
+
         // 2. Ejecutar migraciones pendientes
         await runMigrations(db);
-        
+
         // 3. Sembrar catálogo inicial de productos si está vacío
         await seedProductos(db);
-        
+
         setIsReady(true);
       } catch (err) {
         console.error('[DB Context] Error al inicializar la base de datos:', err);
@@ -52,11 +52,7 @@ function DbProviderInner({ children }) {
     initializeDatabase();
   }, [db]);
 
-  return (
-    <DbContext.Provider value={{ db, isReady, error }}>
-      {children}
-    </DbContext.Provider>
-  );
+  return <DbContext.Provider value={{ db, isReady, error }}>{children}</DbContext.Provider>;
 }
 
 /**

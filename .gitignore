@@ -37,5 +37,14 @@ ios/
 *.tmp
 *.temp
 
-# Android APKs
+# Android build artifacts
 .apk
+.aab
+.apks
+
+# Keystore and signing
+keystore.jks
+credentials.json
+
+# Bundletool (conversor AAB → APKS)
+bundletool-all.jar

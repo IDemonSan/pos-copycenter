@@ -86,7 +86,9 @@ export async function ejecutarSync(db) {
   // Realizar inicio de sesión automático usando las credenciales guardadas antes de consultar/enviar datos
   const isAuth = await asegurarAutenticacion();
   if (!isAuth) {
-    console.warn('[SyncWorker] No se puede sincronizar: el cliente de Supabase no está autenticado.');
+    console.warn(
+      '[SyncWorker] No se puede sincronizar: el cliente de Supabase no está autenticado.',
+    );
     return;
   }
 
@@ -103,7 +105,6 @@ export async function ejecutarSync(db) {
     const pendientes = await getPendientesSync(db);
     pendientesCount = pendientes.productos + pendientes.ventas + pendientes.detalle_ventas;
     onPendientesChange?.(pendientesCount);
-
   } catch (error) {
     console.warn('[SyncWorker] Error durante la sincronización:', error.message);
   } finally {
@@ -123,17 +124,15 @@ async function sincronizarProductos(db) {
       break;
     }
 
-    const loteConSync = lote.map(r => ({ ...r, is_synced: 1 }));
-    const { error } = await supabase
-      .from('productos')
-      .upsert(loteConSync, { onConflict: 'id' });
+    const loteConSync = lote.map((r) => ({ ...r, is_synced: 1 }));
+    const { error } = await supabase.from('productos').upsert(loteConSync, { onConflict: 'id' });
 
     if (error) {
       console.warn('[SyncWorker] Error al subir productos:', error.message);
       throw error;
     }
 
-    const ids = lote.map(r => r.id);
+    const ids = lote.map((r) => r.id);
     await marcarSincronizados(db, { tabla: 'productos', ids });
 
     hayMas = lote.length === 100;
@@ -154,7 +153,7 @@ async function sincronizarVentasYDetalles(db) {
     }
 
     // A. Subir cabeceras de ventas
-    const ventasConSync = ventasLote.map(v => ({ ...v, is_synced: 1 }));
+    const ventasConSync = ventasLote.map((v) => ({ ...v, is_synced: 1 }));
     const { error: ventasError } = await supabase
       .from('ventas')
       .upsert(ventasConSync, { onConflict: 'id' });
@@ -165,11 +164,11 @@ async function sincronizarVentasYDetalles(db) {
     }
 
     // B. Obtener detalles para este lote específico de ventas
-    const ventaIds = ventasLote.map(v => v.id);
+    const ventaIds = ventasLote.map((v) => v.id);
     const placeholders = ventaIds.map(() => '?').join(',');
     const detallesLote = await db.getAllAsync(
       `SELECT * FROM detalle_ventas WHERE venta_id IN (${placeholders});`,
-      ventaIds
+      ventaIds,
     );
 
     if (detallesLote.length > 0) {

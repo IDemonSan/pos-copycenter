@@ -47,10 +47,7 @@ export function VentaProvider({ children }) {
     const hoy = new Date().toISOString().slice(0, 10);
 
     if (fecha > hoy) {
-      Alert.alert(
-        'Fecha no válida',
-        'No puedes registrar ventas con fecha futura.'
-      );
+      Alert.alert('Fecha no válida', 'No puedes registrar ventas con fecha futura.');
       return;
     }
 
@@ -58,14 +55,14 @@ export function VentaProvider({ children }) {
       Alert.alert(
         'Fecha anterior',
         `Estás registrando una venta con fecha ${formatearFechaLegible(fecha)}. ` +
-        `Esto quedará marcado como transcripción.`,
+          `Esto quedará marcado como transcripción.`,
         [
           { text: 'Cancelar', style: 'cancel' },
           {
             text: 'Continuar',
             onPress: () => setFechaVentaState(fecha),
           },
-        ]
+        ],
       );
       return;
     }
@@ -76,7 +73,7 @@ export function VentaProvider({ children }) {
   const recargarTurno = useCallback(async () => {
     if (!db) return;
     const result = await db.getFirstAsync(
-      "SELECT value FROM app_config WHERE key = 'turno_activo'"
+      "SELECT value FROM app_config WHERE key = 'turno_activo'",
     );
     if (result?.value) setTurnoActivo(result.value);
   }, [db]);

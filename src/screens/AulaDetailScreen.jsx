@@ -6,7 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useIsFocused } from '@react-navigation/native';
@@ -17,15 +17,38 @@ import ConfirmModal from '../components/ConfirmModal';
 import COLORS from '../constants/colors';
 
 const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
 function formatReadableDate(dateString) {
   try {
     const date = new Date(dateString + 'T12:00:00');
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
   } catch (e) {
     return dateString;
@@ -79,7 +102,7 @@ export default function AulaDetailScreen() {
         `SELECT * FROM ventas
          WHERE aula = ? AND strftime('%Y-%m', fecha_venta) = ? AND anulado_at IS NULL
          ORDER BY fecha_venta DESC, fecha_registro DESC;`,
-        [aula, mes]
+        [aula, mes],
       );
 
       // 2. Obtener detalles para cada venta
@@ -87,10 +110,9 @@ export default function AulaDetailScreen() {
       let totalDeuda = 0;
 
       for (const sale of sales) {
-        const details = await db.getAllAsync(
-          `SELECT * FROM detalle_ventas WHERE venta_id = ?;`,
-          [sale.id]
-        );
+        const details = await db.getAllAsync(`SELECT * FROM detalle_ventas WHERE venta_id = ?;`, [
+          sale.id,
+        ]);
         salesWithDetails.push({ ...sale, detalles: details });
 
         const saldo = sale.total_cents - (sale.pagado_cents || 0);
@@ -144,57 +166,45 @@ export default function AulaDetailScreen() {
     const fechaText = formatReadableDate(venta.fecha_venta);
     const montoText = `S/ ${(venta.total_cents / 100).toFixed(2)}`;
 
-    Alert.alert(
-      'Opciones',
-      `Venta del ${fechaText} — ${montoText}`,
-      [
-        {
-          text: 'Anular esta venta',
-          style: 'destructive',
-          onPress: () => mostrarModalAnulacion(venta),
-        },
-        { text: 'Cancelar', style: 'cancel' },
-      ]
-    );
+    Alert.alert('Opciones', `Venta del ${fechaText} — ${montoText}`, [
+      {
+        text: 'Anular esta venta',
+        style: 'destructive',
+        onPress: () => mostrarModalAnulacion(venta),
+      },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
   };
 
   const mostrarModalAnulacion = (venta) => {
-    Alert.alert(
-      '¿Por qué se anula?',
-      'Selecciona el motivo de la anulación:',
-      [
-        { text: 'Error en cantidad', onPress: () => ejecutarAnulacion(venta, 'Error en cantidad') },
-        { text: 'Pedido cancelado', onPress: () => ejecutarAnulacion(venta, 'Pedido cancelado') },
-        { text: 'Duplicado', onPress: () => ejecutarAnulacion(venta, 'Duplicado') },
-        { text: 'Cancelar', style: 'cancel' },
-      ]
-    );
+    Alert.alert('¿Por qué se anula?', 'Selecciona el motivo de la anulación:', [
+      { text: 'Error en cantidad', onPress: () => ejecutarAnulacion(venta, 'Error en cantidad') },
+      { text: 'Pedido cancelado', onPress: () => ejecutarAnulacion(venta, 'Pedido cancelado') },
+      { text: 'Duplicado', onPress: () => ejecutarAnulacion(venta, 'Duplicado') },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
   };
 
   const ejecutarAnulacion = async (venta, motivo) => {
     try {
       await anularVenta(db, { id: venta.id, motivo });
-      
+
       // Recargar datos
       await loadVentas();
 
       // Consultar si desea corregir
-      Alert.alert(
-        'Venta anulada',
-        '¿Deseas registrar una venta corregida ahora?',
-        [
-          { text: 'No, gracias', style: 'cancel' },
-          {
-            text: 'Sí, corregir',
-            onPress: () => {
-              navigation.navigate('POS', {
-                aulaPreseleccionada: aula,
-                fechaPreseleccionada: venta.fecha_venta,
-              });
-            },
+      Alert.alert('Venta anulada', '¿Deseas registrar una venta corregida ahora?', [
+        { text: 'No, gracias', style: 'cancel' },
+        {
+          text: 'Sí, corregir',
+          onPress: () => {
+            navigation.navigate('POS', {
+              aulaPreseleccionada: aula,
+              fechaPreseleccionada: venta.fecha_venta,
+            });
           },
-        ]
-      );
+        },
+      ]);
     } catch (err) {
       console.error('[AulaDetail] Error al anular venta:', err);
       Alert.alert('Error', 'No se pudo anular la venta.');
@@ -203,7 +213,7 @@ export default function AulaDetailScreen() {
 
   const renderVentaItem = ({ item }) => {
     const totalSoles = (item.total_cents / 100).toFixed(2);
-    
+
     // Detalle descriptivo de productos
     const productStr = item.detalles
       ? item.detalles.map((d) => `${d.cantidad}x ${d.producto_nombre}`).join(', ')
@@ -219,15 +229,10 @@ export default function AulaDetailScreen() {
           <CustomText style={styles.ventaDate}>{formatReadableDate(item.fecha_venta)}</CustomText>
           <View style={styles.badges}>
             <View
-              style={[
-                styles.badge,
-                item.estado_pago === 1 ? styles.badgePaid : styles.badgeUnpaid,
-              ]}
+              style={[styles.badge, item.estado_pago === 1 ? styles.badgePaid : styles.badgeUnpaid]}
             >
               <CustomText
-                style={
-                  item.estado_pago === 1 ? styles.badgeTextPaid : styles.badgeTextUnpaid
-                }
+                style={item.estado_pago === 1 ? styles.badgeTextPaid : styles.badgeTextUnpaid}
               >
                 {item.estado_pago === 1
                   ? 'Pagado'
@@ -263,15 +268,20 @@ export default function AulaDetailScreen() {
       <View style={styles.container}>
         {/* Header info */}
         <View style={styles.infoBlock}>
-          <CustomText style={styles.titleText}>{aula} — Turno {turno}</CustomText>
+          <CustomText style={styles.titleText}>
+            {aula} — Turno {turno}
+          </CustomText>
           <CustomText style={styles.subtitleText}>
-            {formatMesTitle()} — Deuda: <CustomText style={styles.deudaRed}>S/ {(deudaTotalCents / 100).toFixed(2)}</CustomText>
+            {formatMesTitle()} — Deuda:{' '}
+            <CustomText style={styles.deudaRed}>S/ {(deudaTotalCents / 100).toFixed(2)}</CustomText>
           </CustomText>
         </View>
 
         {ventas.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <CustomText style={styles.emptyText}>No hay ventas registradas para este salón en este mes.</CustomText>
+            <CustomText style={styles.emptyText}>
+              No hay ventas registradas para este salón en este mes.
+            </CustomText>
           </View>
         ) : (
           <FlatList
@@ -310,11 +320,7 @@ export default function AulaDetailScreen() {
 
         {/* FAB: Marcar todo como pagado */}
         {deudasPendientes && (
-          <TouchableOpacity
-            style={styles.fab}
-            activeOpacity={0.8}
-            onPress={handleMarcarTodoPagado}
-          >
+          <TouchableOpacity style={styles.fab} activeOpacity={0.8} onPress={handleMarcarTodoPagado}>
             <CustomText style={styles.fabText}>✓ Pagar todo</CustomText>
           </TouchableOpacity>
         )}

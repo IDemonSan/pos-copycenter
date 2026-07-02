@@ -77,9 +77,9 @@ describe('marcarComoPagado', () => {
       expect(db.runAsync).toHaveBeenCalledTimes(1);
 
       // params: [pagado_cents, estado_pago, now, id]
-      expect(db.updates[0].params[0]).toBe(50000);  // pagado_cents = 50000
-      expect(db.updates[0].params[1]).toBe(0);       // estado_pago = 0 (sigue pendiente)
-      expect(db.updates[0].params[3]).toBe('v1');    // WHERE id = ?
+      expect(db.updates[0].params[0]).toBe(50000); // pagado_cents = 50000
+      expect(db.updates[0].params[1]).toBe(0); // estado_pago = 0 (sigue pendiente)
+      expect(db.updates[0].params[3]).toBe('v1'); // WHERE id = ?
     });
 
     it('aplica pago exacto y marca como pagada', async () => {
@@ -97,7 +97,7 @@ describe('marcarComoPagado', () => {
       await marcarComoPagado(db, { ventaIds: ['v1'], montoCents: 20000 }); // paga 200 más
 
       expect(db.updates[0].params[0]).toBe(50000); // 30000 + 20000 = 50000
-      expect(db.updates[0].params[1]).toBe(0);      // sigue pendiente
+      expect(db.updates[0].params[1]).toBe(0); // sigue pendiente
     });
 
     it('completa venta con pago parcial exacto al saldo restante', async () => {
@@ -106,7 +106,7 @@ describe('marcarComoPagado', () => {
       await marcarComoPagado(db, { ventaIds: ['v1'], montoCents: 30000 });
 
       expect(db.updates[0].params[0]).toBe(80000); // 50000 + 30000 = 80000
-      expect(db.updates[0].params[1]).toBe(1);      // pagada!
+      expect(db.updates[0].params[1]).toBe(1); // pagada!
     });
 
     it('no procesa si montoCents es 0', async () => {
@@ -122,10 +122,7 @@ describe('marcarComoPagado', () => {
   describe('Pago parcial FIFO — múltiples ventas', () => {
     it('distribuye pago FIFO: venta más antigua primero', async () => {
       // v1 es más antigua (fecha_venta ASC)
-      db.setPendientes([
-        createVenta('v1', 80000, 0),
-        createVenta('v2', 50000, 0),
-      ]);
+      db.setPendientes([createVenta('v1', 80000, 0), createVenta('v2', 50000, 0)]);
 
       await marcarComoPagado(db, { ventaIds: ['v1', 'v2'], montoCents: 100000 }); // S/ 1000
 
@@ -133,21 +130,18 @@ describe('marcarComoPagado', () => {
 
       // params: [pagado_cents, estado_pago, now, id]
       // v1 se paga primero (más antigua)
-      expect(db.updates[0].params[0]).toBe(80000);  // v1: pagado_cents = 80000
-      expect(db.updates[0].params[1]).toBe(1);       // v1: estado_pago = 1
-      expect(db.updates[0].params[3]).toBe('v1');    // WHERE id = ?
+      expect(db.updates[0].params[0]).toBe(80000); // v1: pagado_cents = 80000
+      expect(db.updates[0].params[1]).toBe(1); // v1: estado_pago = 1
+      expect(db.updates[0].params[3]).toBe('v1'); // WHERE id = ?
 
       // v2 recibe el resto: remaining = 100000 - 80000 = 20000
-      expect(db.updates[1].params[0]).toBe(20000);  // v2: pagado_cents = 20000
-      expect(db.updates[1].params[1]).toBe(0);       // v2: estado_pago = 0
-      expect(db.updates[1].params[3]).toBe('v2');    // WHERE id = ?
+      expect(db.updates[1].params[0]).toBe(20000); // v2: pagado_cents = 20000
+      expect(db.updates[1].params[1]).toBe(0); // v2: estado_pago = 0
+      expect(db.updates[1].params[3]).toBe('v2'); // WHERE id = ?
     });
 
     it('no paga más del saldo de cada venta', async () => {
-      db.setPendientes([
-        createVenta('v1', 30000, 0),
-        createVenta('v2', 30000, 0),
-      ]);
+      db.setPendientes([createVenta('v1', 30000, 0), createVenta('v2', 30000, 0)]);
 
       await marcarComoPagado(db, { ventaIds: ['v1', 'v2'], montoCents: 50000 }); // S/ 500
 
@@ -176,7 +170,7 @@ describe('marcarComoPagado', () => {
 
       expect(db.updates[0].params[0]).toBe(10000); // v1 pagada
       expect(db.updates[0].params[3]).toBe('v1');
-      expect(db.updates[1].params[0]).toBe(5000);  // v2 parcial
+      expect(db.updates[1].params[0]).toBe(5000); // v2 parcial
       expect(db.updates[1].params[3]).toBe('v2');
     });
   });

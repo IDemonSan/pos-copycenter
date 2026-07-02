@@ -1,12 +1,6 @@
 import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  View,
-  FlatList,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
+import { StyleSheet, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -14,8 +8,18 @@ import { getVentasDelDiaAgrupadas } from '../database/queries/reportes';
 import COLORS from '../constants/colors';
 
 const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
 const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -76,7 +80,7 @@ export default function MetricasDetalleDiaScreen() {
       <View style={styles.header}>
         <CustomText style={styles.headerTitle}>{formatearFechaLarga(fecha)}</CustomText>
         <CustomText style={styles.headerSubtitle}>
-          {ventas.length} venta{(ventas.length !== 1) ? 's' : ''} · S/ {(totalCents / 100).toFixed(2)}
+          {ventas.length} venta{ventas.length !== 1 ? 's' : ''} · S/ {(totalCents / 100).toFixed(2)}
         </CustomText>
       </View>
 
@@ -108,9 +112,7 @@ export default function MetricasDetalleDiaScreen() {
                 ]}
               >
                 <CustomText
-                  style={
-                    item.estado_pago === 1 ? styles.badgeTextPaid : styles.badgeTextUnpaid
-                  }
+                  style={item.estado_pago === 1 ? styles.badgeTextPaid : styles.badgeTextUnpaid}
                 >
                   {item.estado_pago === 1 ? 'Pagado' : 'Pendiente'}
                 </CustomText>
@@ -128,9 +130,7 @@ export default function MetricasDetalleDiaScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <CustomText style={styles.emptyText}>
-              No hay ventas registradas este día.
-            </CustomText>
+            <CustomText style={styles.emptyText}>No hay ventas registradas este día.</CustomText>
           </View>
         }
         ListFooterComponent={

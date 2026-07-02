@@ -7,7 +7,7 @@ import {
   Switch,
   TouchableOpacity,
   Alert,
-  ScrollView
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -47,7 +47,7 @@ export default function ProductoEditScreen() {
       setIsVariable(producto.is_variable === 1);
       setIsCustom(producto.is_custom === 1);
       setActivo(producto.activo === 1);
-      
+
       const soles = (producto.precio_cents / 100).toString();
       setPrecio(soles);
       setPrecioInicial(soles);
@@ -94,7 +94,9 @@ export default function ProductoEditScreen() {
         await actualizarProducto(db, productoActualizado);
       } else {
         // Encontrar maxOrdenActual
-        const result = await db.getFirstAsync("SELECT MAX(orden_prioridad) as maxOrden FROM productos;");
+        const result = await db.getFirstAsync(
+          'SELECT MAX(orden_prioridad) as maxOrden FROM productos;',
+        );
         const maxOrdenActual = result?.maxOrden ?? 0;
 
         const nuevoProducto = {
@@ -108,7 +110,7 @@ export default function ProductoEditScreen() {
         };
         await insertarProducto(db, nuevoProducto);
       }
-      
+
       // Recalcular contador de pendientes en tiempo real
       await recalcularPendientes(db);
 
@@ -141,7 +143,7 @@ export default function ProductoEditScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -155,7 +157,8 @@ export default function ProductoEditScreen() {
     if (val) setIsVariable(false);
   };
 
-  const showPriceWarning = isEditing && !isVariable && !isCustom && precio !== precioInicial && precio !== '';
+  const showPriceWarning =
+    isEditing && !isVariable && !isCustom && precio !== precioInicial && precio !== '';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
@@ -171,7 +174,9 @@ export default function ProductoEditScreen() {
 
         {/* Switch precio variable */}
         <View style={styles.switchRow}>
-          <CustomText style={styles.settingLabel}>Precio variable (solo precio editable)</CustomText>
+          <CustomText style={styles.settingLabel}>
+            Precio variable (solo precio editable)
+          </CustomText>
           <Switch
             value={isVariable}
             onValueChange={handleToggleVariable}
@@ -182,7 +187,9 @@ export default function ProductoEditScreen() {
 
         {/* Switch personalizado / caso especial */}
         <View style={styles.switchRow}>
-          <CustomText style={styles.settingLabel}>Caso Especial (Nombre y precio editables)</CustomText>
+          <CustomText style={styles.settingLabel}>
+            Caso Especial (Nombre y precio editables)
+          </CustomText>
           <Switch
             value={isCustom}
             onValueChange={handleToggleCustom}
@@ -222,11 +229,7 @@ export default function ProductoEditScreen() {
         </View>
 
         {/* Botones de Acción */}
-        <TouchableOpacity
-          style={styles.saveButton}
-          activeOpacity={0.8}
-          onPress={handleSave}
-        >
+        <TouchableOpacity style={styles.saveButton} activeOpacity={0.8} onPress={handleSave}>
           <CustomText style={styles.saveButtonText}>Guardar Producto</CustomText>
         </TouchableOpacity>
 

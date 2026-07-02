@@ -46,7 +46,7 @@ export function SyncProvider({ children }) {
     if (authErrorState === 'credentials_error') {
       Alert.alert(
         'Error de Credenciales',
-        'La sincronización está pausada porque las credenciales de Supabase son incorrectas. Por favor, corrígelas en el menú de Configuración.'
+        'La sincronización está pausada porque las credenciales de Supabase son incorrectas. Por favor, corrígelas en el menú de Configuración.',
       );
       return;
     }
@@ -66,7 +66,10 @@ export function SyncProvider({ children }) {
       await actualizarConteo();
     } catch (error) {
       console.error('[SyncContext] Error al ejecutar sincronización:', error);
-      Alert.alert('Error de Sincronización', error.message || 'No se pudo completar la sincronización.');
+      Alert.alert(
+        'Error de Sincronización',
+        error.message || 'No se pudo completar la sincronización.',
+      );
     } finally {
       setIsSyncing(false);
     }

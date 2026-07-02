@@ -41,15 +41,15 @@ function termToStr(term) {
 function calcularTotal(expresiones, current) {
   let total = 0;
   for (const expr of expresiones) {
-    total += expr.multiplicador != null
-      ? expr.multiplicando * expr.multiplicador
-      : expr.multiplicando;
+    total +=
+      expr.multiplicador != null ? expr.multiplicando * expr.multiplicador : expr.multiplicando;
   }
   // Agregar término actual si existe
   if (current.multiplicando > 0) {
-    total += current.multiplicador != null
-      ? current.multiplicando * current.multiplicador
-      : current.multiplicando;
+    total +=
+      current.multiplicador != null
+        ? current.multiplicando * current.multiplicador
+        : current.multiplicando;
   }
   return total;
 }
@@ -112,7 +112,10 @@ export default function useCarrito(db, actualizarConteo) {
     }
 
     // Término actual
-    if (expresiones.length > 0 && (currentMultiplicando || isModoMultiplicacion || currentMultiplicador)) {
+    if (
+      expresiones.length > 0 &&
+      (currentMultiplicando || isModoMultiplicacion || currentMultiplicador)
+    ) {
       if (isModoMultiplicacion) {
         partes.push(`${currentMultiplicando}×${currentMultiplicador || ''}`);
       } else {
@@ -148,17 +151,16 @@ export default function useCarrito(db, actualizarConteo) {
 
   // ─── Lógica del pad ──────────────────────────────────────────────────────
 
-  const handleNumberPress = useCallback((digit) => {
-    if (!isModoMultiplicacion) {
-      setCurrentMultiplicando(prev =>
-        prev.length < MAX_DIGITS ? prev + digit : prev
-      );
-    } else {
-      setCurrentMultiplicador(prev =>
-        prev.length < MAX_DIGITS ? prev + digit : prev
-      );
-    }
-  }, [isModoMultiplicacion]);
+  const handleNumberPress = useCallback(
+    (digit) => {
+      if (!isModoMultiplicacion) {
+        setCurrentMultiplicando((prev) => (prev.length < MAX_DIGITS ? prev + digit : prev));
+      } else {
+        setCurrentMultiplicador((prev) => (prev.length < MAX_DIGITS ? prev + digit : prev));
+      }
+    },
+    [isModoMultiplicacion],
+  );
 
   const handleXPress = useCallback(() => {
     if (currentMultiplicando.length > 0) {
@@ -175,11 +177,11 @@ export default function useCarrito(db, actualizarConteo) {
     if (!term) {
       // Si no hay término actual (buffer vacío), no hace nada
       hapticBufferVacio();
-      setShakeSignal(prev => prev + 1);
+      setShakeSignal((prev) => prev + 1);
       return;
     }
 
-    setExpresiones(prev => [...prev, term]);
+    setExpresiones((prev) => [...prev, term]);
     setCurrentMultiplicando('');
     setCurrentMultiplicador('');
     setIsModoMultiplicacion(false);
@@ -188,17 +190,17 @@ export default function useCarrito(db, actualizarConteo) {
   const handleBackspace = useCallback(() => {
     if (isModoMultiplicacion) {
       if (currentMultiplicador.length > 0) {
-        setCurrentMultiplicador(prev => prev.slice(0, -1));
+        setCurrentMultiplicador((prev) => prev.slice(0, -1));
       } else {
         setIsModoMultiplicacion(false);
       }
     } else if (currentMultiplicando.length > 0) {
-      setCurrentMultiplicando(prev => prev.slice(0, -1));
+      setCurrentMultiplicando((prev) => prev.slice(0, -1));
     } else if (expresiones.length > 0) {
       // Si el término actual está vacío y hay expresiones guardadas,
       // retrocede al último término guardado
       const ultima = expresiones[expresiones.length - 1];
-      setExpresiones(prev => prev.slice(0, -1));
+      setExpresiones((prev) => prev.slice(0, -1));
       setCurrentMultiplicando(String(ultima.multiplicando));
       if (ultima.multiplicador != null) {
         setCurrentMultiplicador(String(ultima.multiplicador));
@@ -217,114 +219,7 @@ export default function useCarrito(db, actualizarConteo) {
     setIsModoMultiplicacion(false);
   }, []);
 
-  // ─── Agregar producto al carrito (con merge automático) ─────────────────
-
-  const agregarAlCarrito = useCallback((producto) => {
-    // 1. Obtener el término actual
-    const currentTerm = getCurrentTerm();
-
-    // Si no hay término actual ni expresiones guardadas, usar 1 como default
-    const hasNoInput = expresiones.length === 0 && currentMultiplicando === '';
-    if (hasNoInput) {
-      // Caso especial: buffer vacío → agregar 1 unidad del producto
-      if (producto.is_custom) {
-        return {
-          needsCustom: true,
-          producto,
-          totalUnidades: 1,
-          multiplicadorInfo: null,
-        };
-      }
-      if (producto.is_variable) {
-        return {
-          needsPrice: true,
-          producto,
-          totalUnidades: 1,
-          multiplicadorInfo: null,
-        };
-      }
-
-      const nuevaLinea = {
-        id: generateUUID(),
-        producto_id: producto.id,
-        producto_nombre: producto.nombre,
-        cantidad: 1,
-        precio_unitario_cents: producto.precio_cents,
-        subtotal_cents: producto.precio_cents,
-        detalle_multiplicador: null,
-      };
-
-      mergeOrAddAlCarrito(nuevaLinea);
-      limpiarBuffer();
-      hapticProductoAgregado();
-      return;
-    }
-
-    // 2. Validar el término actual
-    if (currentTerm) {
-      const valido = currentTerm.multiplicador != null
-        ? (currentTerm.multiplicando > 0 && currentTerm.multiplicador > 0)
-        : currentTerm.multiplicando > 0;
-
-      if (!valido) {
-        hapticBufferVacio();
-        setShakeSignal(prev => prev + 1);
-        return;
-      }
-    }
-
-    // 3. Construir expresión completa
-    const todasLasExpresiones = [
-      ...expresiones,
-      ...(currentTerm ? [currentTerm] : []),
-    ];
-
-    const totalUnidades = calcularTotal(expresiones, currentTerm || { multiplicando: 0 });
-    const multiplicadorInfo = buildExpressionStr(expresiones, currentTerm || { multiplicando: 0 });
-
-    // 4. Validar total
-    if (totalUnidades <= 0) {
-      hapticBufferVacio();
-      setShakeSignal(prev => prev + 1);
-      return;
-    }
-
-    // 5. Producto personalizado o variable → retornar info para modal
-    if (producto.is_custom) {
-      return {
-        needsCustom: true,
-        producto,
-        totalUnidades,
-        multiplicadorInfo,
-      };
-    }
-
-    if (producto.is_variable) {
-      return {
-        needsPrice: true,
-        producto,
-        totalUnidades,
-        multiplicadorInfo,
-      };
-    }
-
-    // 6. Producto de precio fijo → agregar al carrito
-    const subtotal_cents = totalUnidades * producto.precio_cents;
-
-    const nuevaLinea = {
-      id: generateUUID(),
-      producto_id: producto.id,
-      producto_nombre: producto.nombre,
-      cantidad: totalUnidades,
-      precio_unitario_cents: producto.precio_cents,
-      subtotal_cents,
-      detalle_multiplicador: multiplicadorInfo,
-    };
-
-    mergeOrAddAlCarrito(nuevaLinea);
-    limpiarBuffer();
-    hapticProductoAgregado();
-  }, [expresiones, getCurrentTerm, limpiarBuffer]);
+  // ─── Merge interno: fusiona líneas del mismo producto ─────────────────
 
   /**
    * Función interna: si ya existe un item con el mismo producto_id en el carrito
@@ -334,19 +229,18 @@ export default function useCarrito(db, actualizarConteo) {
    * nombre y precio únicos (ej: "Anillado color" vs "Empastado").
    */
   const mergeOrAddAlCarrito = useCallback((nuevaLinea) => {
-    setCarrito(prev => {
+    setCarrito((prev) => {
       // Products personalizados/variables usan producto_id único para evitar merge
       // (generado con UUID en agregarAlCarritoCustom/conPrecio)
-      const idx = prev.findIndex(item => item.id === nuevaLinea.id);
+      const idx = prev.findIndex((item) => item.id === nuevaLinea.id);
       if (idx >= 0) {
         // Mismo UUID → ya existe, no duplicar
         return prev;
       }
 
       // Para productos de precio fijo, buscar por producto_id
-      const existingIdx = prev.findIndex(item =>
-        item.producto_id === nuevaLinea.producto_id &&
-        item.id !== nuevaLinea.id
+      const existingIdx = prev.findIndex(
+        (item) => item.producto_id === nuevaLinea.producto_id && item.id !== nuevaLinea.id,
       );
 
       if (existingIdx === -1) {
@@ -382,59 +276,167 @@ export default function useCarrito(db, actualizarConteo) {
     });
   }, []);
 
+  // ─── Agregar producto al carrito (con merge automático) ─────────────────
+
+  const agregarAlCarrito = useCallback(
+    (producto) => {
+      // 1. Obtener el término actual
+      const currentTerm = getCurrentTerm();
+
+      // Si no hay término actual ni expresiones guardadas, usar 1 como default
+      const hasNoInput = expresiones.length === 0 && currentMultiplicando === '';
+      if (hasNoInput) {
+        // Caso especial: buffer vacío → agregar 1 unidad del producto
+        if (producto.is_custom) {
+          return {
+            needsCustom: true,
+            producto,
+            totalUnidades: 1,
+            multiplicadorInfo: null,
+          };
+        }
+        if (producto.is_variable) {
+          return {
+            needsPrice: true,
+            producto,
+            totalUnidades: 1,
+            multiplicadorInfo: null,
+          };
+        }
+
+        const nuevaLinea = {
+          id: generateUUID(),
+          producto_id: producto.id,
+          producto_nombre: producto.nombre,
+          cantidad: 1,
+          precio_unitario_cents: producto.precio_cents,
+          subtotal_cents: producto.precio_cents,
+          detalle_multiplicador: null,
+        };
+
+        mergeOrAddAlCarrito(nuevaLinea);
+        limpiarBuffer();
+        hapticProductoAgregado();
+        return;
+      }
+
+      // 2. Validar el término actual
+      if (currentTerm) {
+        const valido =
+          currentTerm.multiplicador != null
+            ? currentTerm.multiplicando > 0 && currentTerm.multiplicador > 0
+            : currentTerm.multiplicando > 0;
+
+        if (!valido) {
+          hapticBufferVacio();
+          setShakeSignal((prev) => prev + 1);
+          return;
+        }
+      }
+
+      // 3. Construir expresión completa
+      const todasLasExpresiones = [...expresiones, ...(currentTerm ? [currentTerm] : [])];
+
+      const totalUnidades = calcularTotal(expresiones, currentTerm || { multiplicando: 0 });
+      const multiplicadorInfo = buildExpressionStr(
+        expresiones,
+        currentTerm || { multiplicando: 0 },
+      );
+
+      // 4. Validar total
+      if (totalUnidades <= 0) {
+        hapticBufferVacio();
+        setShakeSignal((prev) => prev + 1);
+        return;
+      }
+
+      // 5. Producto personalizado o variable → retornar info para modal
+      if (producto.is_custom) {
+        return {
+          needsCustom: true,
+          producto,
+          totalUnidades,
+          multiplicadorInfo,
+        };
+      }
+
+      if (producto.is_variable) {
+        return {
+          needsPrice: true,
+          producto,
+          totalUnidades,
+          multiplicadorInfo,
+        };
+      }
+
+      // 6. Producto de precio fijo → agregar al carrito
+      const subtotal_cents = totalUnidades * producto.precio_cents;
+
+      const nuevaLinea = {
+        id: generateUUID(),
+        producto_id: producto.id,
+        producto_nombre: producto.nombre,
+        cantidad: totalUnidades,
+        precio_unitario_cents: producto.precio_cents,
+        subtotal_cents,
+        detalle_multiplicador: multiplicadorInfo,
+      };
+
+      mergeOrAddAlCarrito(nuevaLinea);
+      limpiarBuffer();
+      hapticProductoAgregado();
+    },
+    [expresiones, getCurrentTerm, limpiarBuffer, mergeOrAddAlCarrito],
+  );
+
   // Versión para productos de precio variable (con modal)
-  const agregarAlCarritoConPrecio = useCallback(({
-    producto,
-    totalUnidades,
-    multiplicadorInfo,
-    precioUnitarioCents,
-  }) => {
-    const subtotal_cents = totalUnidades * precioUnitarioCents;
+  const agregarAlCarritoConPrecio = useCallback(
+    ({ producto, totalUnidades, multiplicadorInfo, precioUnitarioCents }) => {
+      const subtotal_cents = totalUnidades * precioUnitarioCents;
 
-    const nuevaLinea = {
-      id: generateUUID(),
-      producto_id: producto.id,
-      producto_nombre: producto.nombre,
-      cantidad: totalUnidades,
-      precio_unitario_cents: precioUnitarioCents,
-      subtotal_cents,
-      detalle_multiplicador: multiplicadorInfo,
-    };
+      const nuevaLinea = {
+        id: generateUUID(),
+        producto_id: producto.id,
+        producto_nombre: producto.nombre,
+        cantidad: totalUnidades,
+        precio_unitario_cents: precioUnitarioCents,
+        subtotal_cents,
+        detalle_multiplicador: multiplicadorInfo,
+      };
 
-    mergeOrAddAlCarrito(nuevaLinea);
-    limpiarBuffer();
-    hapticProductoAgregado();
-  }, [mergeOrAddAlCarrito, limpiarBuffer]);
+      mergeOrAddAlCarrito(nuevaLinea);
+      limpiarBuffer();
+      hapticProductoAgregado();
+    },
+    [mergeOrAddAlCarrito, limpiarBuffer],
+  );
 
   // Versión para productos personalizados
-  const agregarAlCarritoCustom = useCallback(({
-    producto,
-    nombreCustom,
-    totalUnidades,
-    multiplicadorInfo,
-    precioUnitarioCents,
-  }) => {
-    const subtotal_cents = totalUnidades * precioUnitarioCents;
+  const agregarAlCarritoCustom = useCallback(
+    ({ producto, nombreCustom, totalUnidades, multiplicadorInfo, precioUnitarioCents }) => {
+      const subtotal_cents = totalUnidades * precioUnitarioCents;
 
-    const nuevaLinea = {
-      id: generateUUID(),
-      producto_id: producto.id,
-      producto_nombre: nombreCustom,
-      cantidad: totalUnidades,
-      precio_unitario_cents: precioUnitarioCents,
-      subtotal_cents,
-      detalle_multiplicador: multiplicadorInfo,
-    };
+      const nuevaLinea = {
+        id: generateUUID(),
+        producto_id: producto.id,
+        producto_nombre: nombreCustom,
+        cantidad: totalUnidades,
+        precio_unitario_cents: precioUnitarioCents,
+        subtotal_cents,
+        detalle_multiplicador: multiplicadorInfo,
+      };
 
-    mergeOrAddAlCarrito(nuevaLinea);
-    limpiarBuffer();
-    hapticProductoAgregado();
-  }, [mergeOrAddAlCarrito, limpiarBuffer]);
+      mergeOrAddAlCarrito(nuevaLinea);
+      limpiarBuffer();
+      hapticProductoAgregado();
+    },
+    [mergeOrAddAlCarrito, limpiarBuffer],
+  );
 
   // ─── Quitar del carrito ───────────────────────────────────────────────────
 
   const quitarDelCarrito = useCallback((itemId) => {
-    setCarrito(prev => prev.filter(item => item.id !== itemId));
+    setCarrito((prev) => prev.filter((item) => item.id !== itemId));
   }, []);
 
   const limpiarCarrito = useCallback(() => {
@@ -444,54 +446,57 @@ export default function useCarrito(db, actualizarConteo) {
 
   // ─── Confirmar venta ─────────────────────────────────────────────────────
 
-  const confirmarVenta = useCallback(async ({ aula, turno, fechaVenta }) => {
-    if (carrito.length === 0) return;
-    if (!aula) {
-      Alert.alert('Falta el aula', 'Selecciona un aula antes de confirmar la venta.');
-      return;
-    }
-
-    setIsGuardando(true);
-    try {
-      const ventaId = generateUUID();
-      const ahora = new Date().toISOString();
-
-      const venta = {
-        id: ventaId,
-        fecha_venta: fechaVenta,
-        fecha_registro: ahora,
-        turno,
-        aula,
-        total_cents: carrito.reduce((sum, item) => sum + item.subtotal_cents, 0),
-        estado_pago: 0,
-        anulado_at: null,
-        motivo_anulacion: null,
-        is_synced: 0,
-        updated_at: ahora,
-      };
-
-      const detalles = carrito.map(item => ({
-        ...item,
-        venta_id: ventaId,
-      }));
-
-      await insertarVenta(db, { venta, detalles });
-
-      await recalcularPendientes(db);
-      if (actualizarConteo) {
-        await actualizarConteo();
+  const confirmarVenta = useCallback(
+    async ({ aula, turno, fechaVenta }) => {
+      if (carrito.length === 0) return;
+      if (!aula) {
+        Alert.alert('Falta el aula', 'Selecciona un aula antes de confirmar la venta.');
+        return;
       }
 
-      hapticVentaConfirmada();
-      limpiarCarrito();
-    } catch (error) {
-      hapticError();
-      Alert.alert('Error', 'No se pudo guardar la venta. Intenta de nuevo.');
-      console.error('[useCarrito] Error al confirmar venta:', error);
-    } finally {
-      setIsGuardando(false);
-    }
-  }, [carrito, db, limpiarCarrito, actualizarConteo]);
+      setIsGuardando(true);
+      try {
+        const ventaId = generateUUID();
+        const ahora = new Date().toISOString();
+
+        const venta = {
+          id: ventaId,
+          fecha_venta: fechaVenta,
+          fecha_registro: ahora,
+          turno,
+          aula,
+          total_cents: carrito.reduce((sum, item) => sum + item.subtotal_cents, 0),
+          estado_pago: 0,
+          anulado_at: null,
+          motivo_anulacion: null,
+          is_synced: 0,
+          updated_at: ahora,
+        };
+
+        const detalles = carrito.map((item) => ({
+          ...item,
+          venta_id: ventaId,
+        }));
+
+        await insertarVenta(db, { venta, detalles });
+
+        await recalcularPendientes(db);
+        if (actualizarConteo) {
+          await actualizarConteo();
+        }
+
+        hapticVentaConfirmada();
+        limpiarCarrito();
+      } catch (error) {
+        hapticError();
+        Alert.alert('Error', 'No se pudo guardar la venta. Intenta de nuevo.');
+        console.error('[useCarrito] Error al confirmar venta:', error);
+      } finally {
+        setIsGuardando(false);
+      }
+    },
+    [carrito, db, limpiarCarrito, actualizarConteo],
+  );
 
   return {
     // Estado del carrito

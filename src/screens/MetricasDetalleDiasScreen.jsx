@@ -15,8 +15,18 @@ import { getVentasPorDiaDelMes } from '../database/queries/reportes';
 import COLORS from '../constants/colors';
 
 const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -41,7 +51,7 @@ export default function MetricasDetalleDiasScreen() {
 
   const hoy = new Date();
   const [mesSeleccionado, setMesSeleccionado] = useState(
-    `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`
+    `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`,
   );
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -132,13 +142,21 @@ export default function MetricasDetalleDiasScreen() {
                     setShowMonthModal(false);
                   }}
                 >
-                  <CustomText style={[styles.modalOptionText, esSeleccionado && styles.modalOptionTextSelected]}>
+                  <CustomText
+                    style={[
+                      styles.modalOptionText,
+                      esSeleccionado && styles.modalOptionTextSelected,
+                    ]}
+                  >
                     {getNombreMes(m)}
                   </CustomText>
                 </TouchableOpacity>
               );
             })}
-            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowMonthModal(false)}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowMonthModal(false)}
+            >
               <CustomText style={styles.modalCloseButtonText}>Cancelar</CustomText>
             </TouchableOpacity>
           </View>
@@ -156,9 +174,11 @@ export default function MetricasDetalleDiasScreen() {
             onPress={() => navigation.navigate('MetricasDetalleDia', { fecha: item.dia })}
           >
             <CustomText style={styles.diaLabel}>{formatearFechaCorta(item.dia)}</CustomText>
-            <CustomText style={styles.diaAmount}>S/ {(item.total_cents / 100).toFixed(2)}</CustomText>
+            <CustomText style={styles.diaAmount}>
+              S/ {(item.total_cents / 100).toFixed(2)}
+            </CustomText>
             <CustomText style={styles.diaPedidos}>
-              {item.pedidos} pedido{(item.pedidos !== 1) ? 's' : ''}
+              {item.pedidos} pedido{item.pedidos !== 1 ? 's' : ''}
             </CustomText>
           </TouchableOpacity>
         )}

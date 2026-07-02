@@ -1,30 +1,28 @@
 import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
-import {
-  getTotalPorDia,
-  getTotalPorMes,
-  getTotalMesAnterior,
-} from '../database/queries/reportes';
+import { getTotalPorDia, getTotalPorMes, getTotalMesAnterior } from '../database/queries/reportes';
 import COLORS from '../constants/colors';
 
 const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
-const DIAS_SEMANA = [
-  'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'
-];
+const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 function formatearFecha(fechaStr) {
   try {
@@ -104,21 +102,22 @@ export default function MetricasScreen() {
   }
 
   const diffHoyAyer = hoy.total_cents - ayer.total_cents;
-  const diffHoyAyerText = diffHoyAyer >= 0
-    ? `+S/ ${(diffHoyAyer / 100).toFixed(2)}`
-    : `-S/ ${(Math.abs(diffHoyAyer) / 100).toFixed(2)}`;
+  const diffHoyAyerText =
+    diffHoyAyer >= 0
+      ? `+S/ ${(diffHoyAyer / 100).toFixed(2)}`
+      : `-S/ ${(Math.abs(diffHoyAyer) / 100).toFixed(2)}`;
   const diffHoyAyerColor = diffHoyAyer >= 0 ? COLORS.pagadoVerde : COLORS.deudaRojo;
 
   const diffMes = mesActual.total_cents - mesAnterior.total_cents;
-  const diffMesText = diffMes >= 0
-    ? `+S/ ${(diffMes / 100).toFixed(2)}`
-    : `-S/ ${(Math.abs(diffMes) / 100).toFixed(2)}`;
+  const diffMesText =
+    diffMes >= 0
+      ? `+S/ ${(diffMes / 100).toFixed(2)}`
+      : `-S/ ${(Math.abs(diffMes) / 100).toFixed(2)}`;
   const diffMesColor = diffMes >= 0 ? COLORS.pagadoVerde : COLORS.deudaRojo;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-
         {/* ─── COMPARATIVA DIARIA: HOY vs AYER ─── */}
         <View style={styles.card}>
           <CustomText style={styles.cardTitle}>📊 Comparativa Diaria</CustomText>
@@ -127,7 +126,9 @@ export default function MetricasScreen() {
             <View style={styles.dayColumn}>
               <CustomText style={styles.dayLabel}>HOY</CustomText>
               <CustomText style={styles.dayDate}>{formatearFecha(hoyStr)}</CustomText>
-              <CustomText style={styles.dayAmount}>S/ {(hoy.total_cents / 100).toFixed(2)}</CustomText>
+              <CustomText style={styles.dayAmount}>
+                S/ {(hoy.total_cents / 100).toFixed(2)}
+              </CustomText>
               <CustomText style={styles.daySubtext}>{hoy.pedidos} pedido(s)</CustomText>
             </View>
 
@@ -141,7 +142,9 @@ export default function MetricasScreen() {
             <View style={styles.dayColumn}>
               <CustomText style={styles.dayLabel}>AYER</CustomText>
               <CustomText style={styles.dayDate}>{formatearFecha(ayerStr)}</CustomText>
-              <CustomText style={styles.dayAmount}>S/ {(ayer.total_cents / 100).toFixed(2)}</CustomText>
+              <CustomText style={styles.dayAmount}>
+                S/ {(ayer.total_cents / 100).toFixed(2)}
+              </CustomText>
               <CustomText style={styles.daySubtext}>{ayer.pedidos} pedido(s)</CustomText>
             </View>
           </View>
@@ -195,7 +198,6 @@ export default function MetricasScreen() {
             <CustomText style={styles.verMasText}>Ver detalle por meses →</CustomText>
           </TouchableOpacity>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );

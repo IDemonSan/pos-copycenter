@@ -36,7 +36,7 @@ export async function exportarBackup(db) {
         total_productos: productos.length,
         total_ventas: ventas.length,
         total_detalles: detalles.length,
-      }
+      },
     };
 
     // 3. Serializar y escribir a FileSystem local temporal
@@ -57,10 +57,7 @@ export async function exportarBackup(db) {
 
     // 5. Actualizar app_config con la fecha del último backup
     const now = new Date().toISOString();
-    await db.runAsync(
-      "UPDATE app_config SET value = ? WHERE key = 'ultimo_backup';",
-      [now]
-    );
+    await db.runAsync("UPDATE app_config SET value = ? WHERE key = 'ultimo_backup';", [now]);
 
     return dateStr;
   } catch (error) {
@@ -98,7 +95,12 @@ export async function importarBackup(db) {
     // 3. Parsear y validar
     const backup = JSON.parse(fileContent);
 
-    if (!backup.data || !backup.data.productos || !backup.data.ventas || !backup.data.detalle_ventas) {
+    if (
+      !backup.data ||
+      !backup.data.productos ||
+      !backup.data.ventas ||
+      !backup.data.detalle_ventas
+    ) {
       throw new Error('Estructura de archivo de respaldo no válida. Faltan tablas obligatorias.');
     }
 
@@ -109,10 +111,10 @@ export async function importarBackup(db) {
       Alert.alert(
         'Confirmar Restauración',
         `¿Está seguro de restaurar desde este archivo?\n\n` +
-        `• Productos en archivo: ${productos.length}\n` +
-        `• Ventas en archivo: ${ventas.length}\n` +
-        `• Detalles en archivo: ${detalle_ventas.length}\n\n` +
-        `Se sobrescribirán o añadirán los registros en la base de datos local. Esta acción no se puede deshacer.`,
+          `• Productos en archivo: ${productos.length}\n` +
+          `• Ventas en archivo: ${ventas.length}\n` +
+          `• Detalles en archivo: ${detalle_ventas.length}\n\n` +
+          `Se sobrescribirán o añadirán los registros en la base de datos local. Esta acción no se puede deshacer.`,
         [
           { text: 'Cancelar', style: 'cancel', onPress: () => resolve(null) },
           {
@@ -137,8 +139,8 @@ export async function importarBackup(db) {
                       p.orden_prioridad ?? 0,
                       p.activo ?? 1,
                       p.is_synced ?? 0,
-                      p.updated_at ?? new Date().toISOString()
-                    ]
+                      p.updated_at ?? new Date().toISOString(),
+                    ],
                   );
                 }
 
@@ -158,8 +160,8 @@ export async function importarBackup(db) {
                       v.anulado_at ?? null,
                       v.motivo_anulacion ?? null,
                       v.is_synced ?? 0,
-                      v.updated_at ?? new Date().toISOString()
-                    ]
+                      v.updated_at ?? new Date().toISOString(),
+                    ],
                   );
                 }
 
@@ -176,8 +178,8 @@ export async function importarBackup(db) {
                       d.cantidad,
                       d.precio_unitario_cents,
                       d.subtotal_cents,
-                      d.detalle_multiplicador ?? null
-                    ]
+                      d.detalle_multiplicador ?? null,
+                    ],
                   );
                 }
 
@@ -185,16 +187,15 @@ export async function importarBackup(db) {
 
                 // Guardar la fecha de última restauración en la configuración local
                 const nowStr = new Date().toLocaleString();
-                await db.runAsync(
-                  "UPDATE app_config SET value = ? WHERE key = 'ultimo_backup';",
-                  [nowStr]
-                );
+                await db.runAsync("UPDATE app_config SET value = ? WHERE key = 'ultimo_backup';", [
+                  nowStr,
+                ]);
 
                 resolve({
                   productos: productos.length,
                   ventas: ventas.length,
                   detalles: detalle_ventas.length,
-                  fecha: nowStr
+                  fecha: nowStr,
                 });
               } catch (err) {
                 try {
@@ -202,15 +203,13 @@ export async function importarBackup(db) {
                 } catch (_) {}
                 reject(err);
               }
-            }
-          }
-        ]
+            },
+          },
+        ],
       );
     });
-
   } catch (error) {
     console.error('[Backup Service] Error al importar backup:', error);
     throw error;
   }
 }
-

@@ -34,29 +34,41 @@ const obtenerFechaLocal = () => {
 };
 
 const AULAS_POR_TURNO = {
-  'Mañana': [
-    '1° A', '1° B',
-    '2° A', '2° B',
-    '3° A', '3° B',
-    '4° A', '4° B',
-    '5° A', '5° B',
-    '6° A', '6° B',
+  Mañana: [
+    '1° A',
+    '1° B',
+    '2° A',
+    '2° B',
+    '3° A',
+    '3° B',
+    '4° A',
+    '4° B',
+    '5° A',
+    '5° B',
+    '6° A',
+    '6° B',
   ],
-  'Tarde': [
-    '1° C',
-    '2° C',
-    '3° C',
-    '4° C',
-    '5° C',
-    '6° C',
-  ],
+  Tarde: ['1° C', '2° C', '3° C', '4° C', '5° C', '6° C'],
 };
 
 function formatReadableDate(dateString) {
   try {
     const date = new Date(dateString + 'T12:00:00');
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
   } catch (e) {
     return dateString;
@@ -113,7 +125,7 @@ export default function POSScreen({ route, navigation }) {
       }, 150);
 
       return () => clearTimeout(timeoutId);
-    }, [])
+    }, []),
   );
 
   const aulasDisponibles = AULAS_POR_TURNO[turnoActivo] ?? AULAS_POR_TURNO['Mañana'];
@@ -151,7 +163,7 @@ export default function POSScreen({ route, navigation }) {
       });
     }
   }, [route?.params]);
-  
+
   // Estado para el modal de precio variable
   const [variableProductModal, setVariableProductModal] = useState({
     visible: false,
@@ -186,13 +198,15 @@ export default function POSScreen({ route, navigation }) {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: scaleLayout(16) }}>
-          <View style={{
-            flexDirection: 'row',
-            backgroundColor: '#374151',
-            borderRadius: scaleLayout(8),
-            padding: scaleLayout(2),
-            marginRight: scaleLayout(8),
-          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              backgroundColor: '#374151',
+              borderRadius: scaleLayout(8),
+              padding: scaleLayout(2),
+              marginRight: scaleLayout(8),
+            }}
+          >
             <TouchableOpacity
               onPress={() => handleCambiarTurno('Mañana')}
               style={{
@@ -202,7 +216,9 @@ export default function POSScreen({ route, navigation }) {
                 backgroundColor: turnoActivo === 'Mañana' ? '#3b82f6' : 'transparent',
               }}
             >
-              <CustomText style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>AM</CustomText>
+              <CustomText style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+                AM
+              </CustomText>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleCambiarTurno('Tarde')}
@@ -213,12 +229,14 @@ export default function POSScreen({ route, navigation }) {
                 backgroundColor: turnoActivo === 'Tarde' ? '#3b82f6' : 'transparent',
               }}
             >
-              <CustomText style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>PM</CustomText>
+              <CustomText style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+                PM
+              </CustomText>
             </TouchableOpacity>
           </View>
           <SyncStatusIcon />
         </View>
-      )
+      ),
     });
   }, [navigation, turnoActivo, aulaSeleccionada]);
 
@@ -231,7 +249,12 @@ export default function POSScreen({ route, navigation }) {
           producto: result.producto,
           totalUnidades: result.totalUnidades,
           multiplicadorInfo: result.multiplicadorInfo,
-          nombreCustom: result.producto.nombre === 'Otro' || result.producto.nombre === 'Otros' || result.producto.nombre === 'Caso Especial' ? '' : result.producto.nombre,
+          nombreCustom:
+            result.producto.nombre === 'Otro' ||
+            result.producto.nombre === 'Otros' ||
+            result.producto.nombre === 'Caso Especial'
+              ? ''
+              : result.producto.nombre,
           precioSoles: '',
         });
       } else if (result.needsPrice) {
@@ -304,7 +327,7 @@ export default function POSScreen({ route, navigation }) {
 
   const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
-    
+
     if (selectedDate) {
       // 1. Obtener la fecha de hoy a las 00:00:00 para comparar solo el día
       const hoy = new Date();
@@ -322,7 +345,7 @@ export default function POSScreen({ route, navigation }) {
       const mes = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const dia = String(selectedDate.getDate()).padStart(2, '0');
       const formatted = `${año}-${mes}-${dia}`;
-      setFechaVenta(formatted); 
+      setFechaVenta(formatted);
     }
   };
 
@@ -334,23 +357,19 @@ export default function POSScreen({ route, navigation }) {
 
     const totalSoles = (totalCarritoCents / 100).toFixed(2);
 
-    Alert.alert(
-      'Confirmar venta',
-      `¿Registrar S/ ${totalSoles} para ${aulaSeleccionada}?`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Confirmar',
-          onPress: async () => {
-            try {
-              await confirmarVenta();
-            } catch (err) {
-              Alert.alert('Error', 'No se pudo guardar la venta. Intenta de nuevo.');
-            }
-          },
+    Alert.alert('Confirmar venta', `¿Registrar S/ ${totalSoles} para ${aulaSeleccionada}?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Confirmar',
+        onPress: async () => {
+          try {
+            await confirmarVenta();
+          } catch (err) {
+            Alert.alert('Error', 'No se pudo guardar la venta. Intenta de nuevo.');
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const totalSoles = (totalCarritoCents / 100).toFixed(2);
@@ -372,7 +391,6 @@ export default function POSScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom']}>
       <View style={styles.container}>
-        
         {/* SECCIÓN SUPERIOR (Filtros y Metadatos) - Altura intrínseca */}
         <View style={styles.selectors}>
           <View style={styles.pickerWrapper}>
@@ -409,9 +427,7 @@ export default function POSScreen({ route, navigation }) {
             <FlatList
               data={carrito}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <CartItem item={item} onRemove={quitarDelCarrito} />
-              )}
+              renderItem={({ item }) => <CartItem item={item} onRemove={quitarDelCarrito} />}
               contentContainerStyle={styles.cartListContent}
             />
           )}
@@ -419,17 +435,25 @@ export default function POSScreen({ route, navigation }) {
 
         {/* SECCIÓN INFERIOR (Módulo de Control unificado ocupando el ancho completo de pantalla) */}
         <View style={styles.lowerSection}>
-          
           {/* TOTAL ROW */}
           <View style={[styles.cartFooter, isCompact && { paddingVertical: scaleLayout(4) }]}>
             <View style={styles.totalRow}>
-              <CustomText style={[styles.totalLabel, isCompact && { fontSize: 13 }]}>TOTAL:</CustomText>
-              <CustomText style={[styles.totalValue, isCompact && { fontSize: 17 }]}>S/ {totalSoles}</CustomText>
+              <CustomText style={[styles.totalLabel, isCompact && { fontSize: 13 }]}>
+                TOTAL:
+              </CustomText>
+              <CustomText style={[styles.totalValue, isCompact && { fontSize: 17 }]}>
+                S/ {totalSoles}
+              </CustomText>
             </View>
           </View>
 
           {/* GRID DE PRODUCTOS - Ocupa todo el ancho, columnas y alto dinámico */}
-          <View style={[styles.productsSection, { height: dynamicProductsHeight, maxHeight: dynamicProductsHeight }]}>
+          <View
+            style={[
+              styles.productsSection,
+              { height: dynamicProductsHeight, maxHeight: dynamicProductsHeight },
+            ]}
+          >
             <FlatList
               key={`products-list-${numColumns}`}
               data={productos}
@@ -454,7 +478,12 @@ export default function POSScreen({ route, navigation }) {
               {displayBuffer || '—'}
             </CustomText>
             {isModoMultiplicacion && (
-              <CustomText style={[styles.bufferHint, isCompact && { fontSize: 10, marginTop: scaleLayout(1) }]}>
+              <CustomText
+                style={[
+                  styles.bufferHint,
+                  isCompact && { fontSize: 10, marginTop: scaleLayout(1) },
+                ]}
+              >
                 toca un producto para agregar al carrito
               </CustomText>
             )}
@@ -473,7 +502,6 @@ export default function POSScreen({ route, navigation }) {
               isModoMultiplicacion={isModoMultiplicacion}
             />
           </View>
-
         </View>
 
         {/* DATE PICKER */}
@@ -495,21 +523,18 @@ export default function POSScreen({ route, navigation }) {
           visible={variableProductModal.visible}
           transparent={true}
           animationType="fade"
-          onRequestClose={() =>
-            setVariableProductModal((prev) => ({ ...prev, visible: false }))
-          }
+          onRequestClose={() => setVariableProductModal((prev) => ({ ...prev, visible: false }))}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <CustomText style={styles.modalTitle}>Precio Variable</CustomText>
               <CustomText style={styles.modalSubtitle}>
-                {variableProductModal.producto?.nombre} - {
-                  variableProductModal.multiplicadorInfo
-                    ? `${variableProductModal.multiplicadorInfo.split('x')[0]} copias × ${variableProductModal.multiplicadorInfo.split('x')[1]} originales = ${variableProductModal.totalUnidades} unidades`
-                    : `${variableProductModal.totalUnidades} unidad(es)`
-                }
+                {variableProductModal.producto?.nombre} -{' '}
+                {variableProductModal.multiplicadorInfo
+                  ? `${variableProductModal.multiplicadorInfo.split('x')[0]} copias × ${variableProductModal.multiplicadorInfo.split('x')[1]} originales = ${variableProductModal.totalUnidades} unidades`
+                  : `${variableProductModal.totalUnidades} unidad(es)`}
               </CustomText>
-              
+
               <TextInput
                 style={styles.priceInput}
                 placeholder="0.00"
@@ -524,13 +549,11 @@ export default function POSScreen({ route, navigation }) {
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.modalCancelButton]}
-                  onPress={() =>
-                    setVariableProductModal((prev) => ({ ...prev, visible: false }))
-                  }
+                  onPress={() => setVariableProductModal((prev) => ({ ...prev, visible: false }))}
                 >
                   <CustomText style={styles.modalCancelText}>Cancelar</CustomText>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={[styles.modalButton, styles.modalConfirmButton]}
                   onPress={handleConfirmVariablePrice}
@@ -547,9 +570,7 @@ export default function POSScreen({ route, navigation }) {
           visible={customProductModal.visible}
           transparent={true}
           animationType="fade"
-          onRequestClose={() =>
-            setCustomProductModal((prev) => ({ ...prev, visible: false }))
-          }
+          onRequestClose={() => setCustomProductModal((prev) => ({ ...prev, visible: false }))}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -557,11 +578,21 @@ export default function POSScreen({ route, navigation }) {
               <CustomText style={styles.modalSubtitle}>
                 {customProductModal.multiplicadorInfo
                   ? `${customProductModal.multiplicadorInfo.split('x')[0]} copias × ${customProductModal.multiplicadorInfo.split('x')[1]} originales = ${customProductModal.totalUnidades} unidades`
-                  : `${customProductModal.totalUnidades} unidad(es)`
-                }
+                  : `${customProductModal.totalUnidades} unidad(es)`}
               </CustomText>
-              
-              <CustomText style={{ marginTop: 10, alignSelf: 'flex-start', fontSize: 11, fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase' }}>Descripción / Nombre:</CustomText>
+
+              <CustomText
+                style={{
+                  marginTop: 10,
+                  alignSelf: 'flex-start',
+                  fontSize: 11,
+                  fontWeight: 'bold',
+                  color: '#4b5563',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Descripción / Nombre:
+              </CustomText>
               <TextInput
                 style={[styles.priceInput, { marginBottom: 12, width: '100%' }]}
                 placeholder="Ej: Copias color del director"
@@ -572,7 +603,17 @@ export default function POSScreen({ route, navigation }) {
                 }
               />
 
-              <CustomText style={{ alignSelf: 'flex-start', fontSize: 11, fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase' }}>Precio (en soles):</CustomText>
+              <CustomText
+                style={{
+                  alignSelf: 'flex-start',
+                  fontSize: 11,
+                  fontWeight: 'bold',
+                  color: '#4b5563',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Precio (en soles):
+              </CustomText>
               <TextInput
                 style={[styles.priceInput, { width: '100%' }]}
                 placeholder="0.00"
@@ -586,13 +627,11 @@ export default function POSScreen({ route, navigation }) {
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.modalCancelButton]}
-                  onPress={() =>
-                    setCustomProductModal((prev) => ({ ...prev, visible: false }))
-                  }
+                  onPress={() => setCustomProductModal((prev) => ({ ...prev, visible: false }))}
                 >
                   <CustomText style={styles.modalCancelText}>Cancelar</CustomText>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={[styles.modalButton, styles.modalConfirmButton]}
                   onPress={handleConfirmCustomProduct}

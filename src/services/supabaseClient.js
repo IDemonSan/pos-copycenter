@@ -62,7 +62,9 @@ export async function asegurarAutenticacion() {
   }
 
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session) {
       authErrorState = null;
       return true;
@@ -80,12 +82,12 @@ export async function asegurarAutenticacion() {
 
       if (error) {
         console.warn('[Supabase Client] Error al iniciar sesión automático:', error.message);
-        if (error.status === 400 || error.message.includes("Invalid login credentials")) {
+        if (error.status === 400 || error.message.includes('Invalid login credentials')) {
           authErrorState = 'credentials_error';
           Alert.alert(
-            "Error de Conexión a la Nube",
-            "Las credenciales ingresadas no apuntan a ningún usuario válido en Supabase. Revisa el correo y la contraseña en Configuración.",
-            [{ text: "OK" }]
+            'Error de Conexión a la Nube',
+            'Las credenciales ingresadas no apuntan a ningún usuario válido en Supabase. Revisa el correo y la contraseña en Configuración.',
+            [{ text: 'OK' }],
           );
         } else {
           authErrorState = 'network_error';

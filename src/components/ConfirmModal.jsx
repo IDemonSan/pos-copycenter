@@ -1,8 +1,6 @@
 import CustomText from './CustomText';
 import React from 'react';
-import {
-  StyleSheet, View, Modal, TouchableOpacity, ActivityIndicator
-} from 'react-native';
+import { StyleSheet, View, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
 import COLORS from '../constants/colors';
 
 /**
@@ -35,12 +33,7 @@ export default function ConfirmModal({
   }
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onCancel}
-    >
+    <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
         <View style={styles.content}>
           <CustomText style={styles.title}>{title}</CustomText>

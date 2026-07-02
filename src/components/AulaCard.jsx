@@ -1,8 +1,6 @@
 import CustomText from './CustomText';
 import React from 'react';
-import {
-  StyleSheet, View, TouchableOpacity
-} from 'react-native';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import COLORS from '../constants/colors';
 
 /**
@@ -15,7 +13,14 @@ import COLORS from '../constants/colors';
  * @param {() => void} props.onVerDetalle Callback al pulsar ver detalle
  * @param {() => void} props.onMarcarPagado Callback al pulsar marcar como pagado
  */
-export default function AulaCard({ aula, turno, deuda_cents, num_pedidos, onVerDetalle, onMarcarPagado }) {
+export default function AulaCard({
+  aula,
+  turno,
+  deuda_cents,
+  num_pedidos,
+  onVerDetalle,
+  onMarcarPagado,
+}) {
   const formattedDeuda = `S/ ${(deuda_cents / 100).toFixed(2)}`;
 
   return (

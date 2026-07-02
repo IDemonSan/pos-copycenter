@@ -1,12 +1,6 @@
 import CustomText from '../components/CustomText';
 import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView
-} from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
@@ -14,13 +8,21 @@ import { getResumenDia, getDeudaPorAula } from '../database/queries/reportes';
 import COLORS from '../constants/colors';
 
 const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
-const DIAS = [
-  'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'
-];
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
 function formatLongDate() {
   const date = new Date();
@@ -69,8 +71,8 @@ export default function HomeScreen() {
 
       // 2. Cargar conteo de pedidos de hoy
       const ordersRes = await db.getFirstAsync(
-        "SELECT COUNT(*) as count FROM ventas WHERE fecha_venta = ? AND anulado_at IS NULL;",
-        [hoy]
+        'SELECT COUNT(*) as count FROM ventas WHERE fecha_venta = ? AND anulado_at IS NULL;',
+        [hoy],
       );
       setPedidosCount(ordersRes?.count ?? 0);
 
@@ -78,7 +80,6 @@ export default function HomeScreen() {
       const dataDeudas = await getDeudaPorAula(db, mesActual);
       // getDeudaPorAula ya devuelve las aulas ordenadas por deuda desc
       setDeudas(dataDeudas.slice(0, 5));
-
     } catch (err) {
       console.error('[Home] Error al cargar resumen:', err);
     } finally {
@@ -134,9 +135,7 @@ export default function HomeScreen() {
             {/* SECCIÓN AULAS CON DEUDA */}
             <View style={styles.sectionHeader}>
               <CustomText style={styles.sectionTitle}>AULAS CON DEUDA</CustomText>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Salones')}
-              >
+              <TouchableOpacity onPress={() => navigation.navigate('Salones')}>
                 <CustomText style={styles.viewAllText}>Ver todas →</CustomText>
               </TouchableOpacity>
             </View>
@@ -147,15 +146,12 @@ export default function HomeScreen() {
               deudas.map((item) => {
                 const totalSoles = (item.deuda_cents / 100).toFixed(2);
                 return (
-                  <View
-                    key={`${item.aula}-${item.turno}`}
-                    style={styles.compactCard}
-                  >
+                  <View key={`${item.aula}-${item.turno}`} style={styles.compactCard}>
                     <View style={styles.compactCardLeft}>
                       <CustomText style={styles.compactAula}>{item.aula}</CustomText>
                       <CustomText style={styles.compactTurno}>Turno: {item.turno}</CustomText>
                     </View>
-                    
+
                     <View style={styles.compactCardRight}>
                       <CustomText style={styles.compactAmount}>S/ {totalSoles}</CustomText>
                       <TouchableOpacity

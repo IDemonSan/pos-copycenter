@@ -6,13 +6,17 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useDb } from '../context/DbContext';
 import { useSync } from '../context/SyncContext';
-import { getTodosLosProductos, intercambiarOrden, eliminarProducto } from '../database/queries/productos';
+import {
+  getTodosLosProductos,
+  intercambiarOrden,
+  eliminarProducto,
+} from '../database/queries/productos';
 import { recalcularPendientes } from '../services/syncWorker';
 import COLORS from '../constants/colors';
 
@@ -101,7 +105,7 @@ export default function ProductosListScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -125,7 +129,9 @@ export default function ProductosListScreen() {
             activeOpacity={0.7}
             onPress={() => handleMoveUp(index)}
           >
-            <CustomText style={[styles.arrowText, isFirst && styles.arrowTextDisabled]}>↑</CustomText>
+            <CustomText style={[styles.arrowText, isFirst && styles.arrowTextDisabled]}>
+              ↑
+            </CustomText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.arrowBtn, isLast && styles.arrowBtnDisabled]}
@@ -133,7 +139,9 @@ export default function ProductosListScreen() {
             activeOpacity={0.7}
             onPress={() => handleMoveDown(index)}
           >
-            <CustomText style={[styles.arrowText, isLast && styles.arrowTextDisabled]}>↓</CustomText>
+            <CustomText style={[styles.arrowText, isLast && styles.arrowTextDisabled]}>
+              ↓
+            </CustomText>
           </TouchableOpacity>
         </View>
 

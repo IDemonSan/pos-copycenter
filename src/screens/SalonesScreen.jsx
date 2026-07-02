@@ -22,17 +22,39 @@ import ConfirmModal from '../components/ConfirmModal';
 import COLORS from '../constants/colors';
 
 const AULAS = [
-  '1° A', '1° B', '1° C',
-  '2° A', '2° B', '2° C',
-  '3° A', '3° B', '3° C',
-  '4° A', '4° B', '4° C',
-  '5° A', '5° B', '5° C',
-  '6° A', '6° B', '6° C',
+  '1° A',
+  '1° B',
+  '1° C',
+  '2° A',
+  '2° B',
+  '2° C',
+  '3° A',
+  '3° B',
+  '3° C',
+  '4° A',
+  '4° B',
+  '4° C',
+  '5° A',
+  '5° B',
+  '5° C',
+  '6° A',
+  '6° B',
+  '6° C',
 ];
 
 const MESES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
 export default function SalonesScreen() {
@@ -56,7 +78,11 @@ export default function SalonesScreen() {
   // Estado para el flujo de pago
   const [pagoInfo, setPagoInfo] = useState({ aula: '', turno: '', deudaCents: 0 });
   const [confirmPago, setConfirmPago] = useState({ visible: false, tipo: null, montoCents: 0 });
-  const [partialInput, setPartialInput] = useState({ visible: false, montoTexto: '', montoCents: 0 });
+  const [partialInput, setPartialInput] = useState({
+    visible: false,
+    montoTexto: '',
+    montoCents: 0,
+  });
   const procesandoRef = useRef(false);
 
   const getNombreMes = (mesString) => {
@@ -73,10 +99,10 @@ export default function SalonesScreen() {
     try {
       // 1. Obtener aulas con deuda del mes seleccionado
       const dataDeudas = await getDeudaPorAula(db, mesSeleccionado);
-      
+
       // Mapear deudas por aula para fácil acceso
       const deudasMap = new Map();
-      dataDeudas.forEach(item => {
+      dataDeudas.forEach((item) => {
         deudasMap.set(item.aula, item);
       });
 
@@ -148,7 +174,7 @@ export default function SalonesScreen() {
           </TouchableOpacity>
           <SyncStatusIcon />
         </View>
-      )
+      ),
     });
   }, [navigation, nombreMes]);
 
@@ -160,7 +186,7 @@ export default function SalonesScreen() {
 
   const handleMarcarPagado = (aula, turno, deudaCents) => {
     setPagoInfo({ aula, turno, deudaCents });
-    
+
     Alert.alert(
       'Registrar pago',
       `${aula} · Turno ${turno}\nDeuda: S/ ${(deudaCents / 100).toFixed(2)}`,
@@ -174,14 +200,15 @@ export default function SalonesScreen() {
           onPress: () => setPartialInput({ visible: true, montoTexto: '', montoCents: 0 }),
         },
         { text: 'Cancelar', style: 'cancel' },
-      ]
+      ],
     );
   };
 
   const formatearMonto = (text) => {
     const cleaned = text.replace(/[^0-9.]/g, '');
     const parts = cleaned.split('.');
-    if (parts.length > 2 || (parts.length === 2 && parts[1].length > 2)) return partialInput.montoTexto;
+    if (parts.length > 2 || (parts.length === 2 && parts[1].length > 2))
+      return partialInput.montoTexto;
     return cleaned;
   };
 
@@ -190,8 +217,8 @@ export default function SalonesScreen() {
     procesandoRef.current = true;
 
     const { aula, turno } = pagoInfo;
-    setConfirmPago(prev => ({ ...prev, visible: false }));
-    setPartialInput(prev => ({ ...prev, visible: false }));
+    setConfirmPago((prev) => ({ ...prev, visible: false }));
+    setPartialInput((prev) => ({ ...prev, visible: false }));
 
     try {
       const sales = await db.getAllAsync(
@@ -201,12 +228,15 @@ export default function SalonesScreen() {
            AND strftime('%Y-%m', fecha_venta) = ?
            AND total_cents > COALESCE(pagado_cents, 0)
            AND anulado_at IS NULL;`,
-        [aula, turno, mesSeleccionado]
+        [aula, turno, mesSeleccionado],
       );
-      const ventaIds = sales.map(s => s.id);
+      const ventaIds = sales.map((s) => s.id);
 
       if (ventaIds.length > 0) {
-        await marcarComoPagado(db, { ventaIds, montoCents: tipo === 'parcial' ? montoCents : undefined });
+        await marcarComoPagado(db, {
+          ventaIds,
+          montoCents: tipo === 'parcial' ? montoCents : undefined,
+        });
         await loadData();
       }
     } catch (err) {
@@ -243,16 +273,13 @@ export default function SalonesScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <CustomText style={styles.modalTitle}>Seleccionar Mes</CustomText>
-              
+
               {ultimosMeses.map((m) => {
                 const esSeleccionado = m === mesSeleccionado;
                 return (
                   <TouchableOpacity
                     key={m}
-                    style={[
-                      styles.modalOption,
-                      esSeleccionado && styles.modalOptionSelected,
-                    ]}
+                    style={[styles.modalOption, esSeleccionado && styles.modalOptionSelected]}
                     onPress={() => {
                       setMesSeleccionado(m);
                       setShowMonthModal(false);
@@ -282,7 +309,9 @@ export default function SalonesScreen() {
 
         {totalAulasRegistradas === 0 && alDia.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <CustomText style={styles.emptyText}>Aún no hay ventas este mes. Ve al POS para registrar.</CustomText>
+            <CustomText style={styles.emptyText}>
+              Aún no hay ventas este mes. Ve al POS para registrar.
+            </CustomText>
           </View>
         ) : (
           <FlatList
@@ -301,7 +330,9 @@ export default function SalonesScreen() {
             contentContainerStyle={styles.listContainer}
             ListHeaderComponent={
               <View style={styles.sectionHeader}>
-                <CustomText style={styles.sectionTitle}>Aulas con Deuda ({conDeuda.length})</CustomText>
+                <CustomText style={styles.sectionTitle}>
+                  Aulas con Deuda ({conDeuda.length})
+                </CustomText>
               </View>
             }
             ListFooterComponent={
@@ -343,7 +374,7 @@ export default function SalonesScreen() {
           confirmText="Sí, pagar todo"
           confirmStyle="success"
           onConfirm={() => ejecutarPago('total', 0)}
-          onCancel={() => setConfirmPago(prev => ({ ...prev, visible: false }))}
+          onCancel={() => setConfirmPago((prev) => ({ ...prev, visible: false }))}
         />
 
         {/* ConfirmModal: Pago parcial */}
@@ -354,7 +385,7 @@ export default function SalonesScreen() {
           confirmText="Sí, pagar parcial"
           confirmStyle="success"
           onConfirm={() => ejecutarPago('parcial', confirmPago.montoCents)}
-          onCancel={() => setConfirmPago(prev => ({ ...prev, visible: false }))}
+          onCancel={() => setConfirmPago((prev) => ({ ...prev, visible: false }))}
         />
 
         {/* Modal inline: Ingreso de monto para pago parcial */}
@@ -390,11 +421,12 @@ export default function SalonesScreen() {
                 />
               </View>
 
-              {partialInput.montoTexto.length > 0 && (partialInput.montoCents <= 0 || partialInput.montoCents > pagoInfo.deudaCents) && (
-                <CustomText style={styles.errorText}>
-                  Ingresa entre S/ 0.01 y S/ {(pagoInfo.deudaCents / 100).toFixed(2)}
-                </CustomText>
-              )}
+              {partialInput.montoTexto.length > 0 &&
+                (partialInput.montoCents <= 0 || partialInput.montoCents > pagoInfo.deudaCents) && (
+                  <CustomText style={styles.errorText}>
+                    Ingresa entre S/ 0.01 y S/ {(pagoInfo.deudaCents / 100).toFixed(2)}
+                  </CustomText>
+                )}
 
               {partialInput.montoCents > 0 && partialInput.montoCents <= pagoInfo.deudaCents && (
                 <CustomText style={styles.resumenText}>
@@ -417,12 +449,20 @@ export default function SalonesScreen() {
                   style={[
                     styles.btn,
                     styles.confirmBtn,
-                    (partialInput.montoCents <= 0 || partialInput.montoCents > pagoInfo.deudaCents) && styles.disabledBtn,
+                    (partialInput.montoCents <= 0 ||
+                      partialInput.montoCents > pagoInfo.deudaCents) &&
+                      styles.disabledBtn,
                   ]}
                   activeOpacity={0.7}
-                  disabled={partialInput.montoCents <= 0 || partialInput.montoCents > pagoInfo.deudaCents}
+                  disabled={
+                    partialInput.montoCents <= 0 || partialInput.montoCents > pagoInfo.deudaCents
+                  }
                   onPress={() => {
-                    setConfirmPago({ visible: true, tipo: 'parcial', montoCents: partialInput.montoCents });
+                    setConfirmPago({
+                      visible: true,
+                      tipo: 'parcial',
+                      montoCents: partialInput.montoCents,
+                    });
                   }}
                 >
                   <CustomText style={styles.confirmBtnText}>Continuar</CustomText>

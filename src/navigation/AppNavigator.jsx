@@ -40,21 +40,13 @@ const defaultStackOptions = {
 function InicioStack() {
   return (
     <Stack.Navigator screenOptions={defaultStackOptions}>
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ title: 'Inicio' }}
-      />
+      <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Inicio' }} />
       <Stack.Screen
         name="AulaDetail"
         component={AulaDetailScreen}
         options={{ title: 'Detalle de Aula' }}
       />
-      <Stack.Screen
-        name="Metricas"
-        component={MetricasScreen}
-        options={{ title: 'Métricas' }}
-      />
+      <Stack.Screen name="Metricas" component={MetricasScreen} options={{ title: 'Métricas' }} />
       <Stack.Screen
         name="MetricasDetalleDias"
         component={MetricasDetalleDiasScreen}
@@ -77,11 +69,7 @@ function InicioStack() {
 function SalonesStack() {
   return (
     <Stack.Navigator screenOptions={defaultStackOptions}>
-      <Stack.Screen
-        name="SalonesHome"
-        component={SalonesScreen}
-        options={{ title: 'Salones' }}
-      />
+      <Stack.Screen name="SalonesHome" component={SalonesScreen} options={{ title: 'Salones' }} />
       <Stack.Screen
         name="AulaDetail"
         component={AulaDetailScreen}

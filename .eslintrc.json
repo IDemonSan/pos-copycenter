@@ -1,10 +1,19 @@
 {
   "extends": ["expo", "prettier"],
   "plugins": ["prettier"],
+  "env": {
+    "jest": true,
+    "node": true
+  },
   "rules": {
     "prettier/prettier": "warn",
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "react/jsx-uses-react": "off",
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/rules-of-hooks": "warn",
+    "react-hooks/set-state-in-effect": "warn",
+    "react-hooks/refs": "warn",
+    "react-hooks/preserve-manual-memoization": "warn"
   }
 }

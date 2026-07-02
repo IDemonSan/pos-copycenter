@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Switch
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
@@ -35,7 +35,7 @@ export default function ConfigScreen() {
     if (!supabase) {
       Alert.alert(
         'Configuración Requerida',
-        'Por favor, configura primero la conexión a la nube (Supabase) en los ajustes generales para poder sincronizar.'
+        'Por favor, configura primero la conexión a la nube (Supabase) en los ajustes generales para poder sincronizar.',
       );
       return;
     }
@@ -46,10 +46,7 @@ export default function ConfigScreen() {
       const descargaStats = await descargarDatosNube(db);
 
       const nowStr = new Date().toLocaleString();
-      await db.runAsync(
-        "UPDATE app_config SET value = ? WHERE key = 'ultimo_backup';",
-        [nowStr]
-      );
+      await db.runAsync("UPDATE app_config SET value = ? WHERE key = 'ultimo_backup';", [nowStr]);
       setUltimoBackup(nowStr);
 
       await loadData();
@@ -58,16 +55,19 @@ export default function ConfigScreen() {
       Alert.alert(
         'Sincronización Completada',
         `Respaldo e integración bidireccional exitosa.\n\n` +
-        `Subida (Nube):\n` +
-        `• ${subidaStats.productos} productos subidos.\n` +
-        `• ${subidaStats.ventas} ventas subidas.\n\n` +
-        `Descarga (Celular):\n` +
-        `• ${descargaStats.productos.creados + descargaStats.productos.actualizados} productos integrados (${descargaStats.productos.creados} nuevos, ${descargaStats.productos.actualizados} actualizados).\n` +
-        `• ${descargaStats.ventas.creados + descargaStats.ventas.actualizados} ventas integradas (${descargaStats.ventas.creados} nuevas, ${descargaStats.ventas.actualizados} actualizadas).`
+          `Subida (Nube):\n` +
+          `• ${subidaStats.productos} productos subidos.\n` +
+          `• ${subidaStats.ventas} ventas subidas.\n\n` +
+          `Descarga (Celular):\n` +
+          `• ${descargaStats.productos.creados + descargaStats.productos.actualizados} productos integrados (${descargaStats.productos.creados} nuevos, ${descargaStats.productos.actualizados} actualizados).\n` +
+          `• ${descargaStats.ventas.creados + descargaStats.ventas.actualizados} ventas integradas (${descargaStats.ventas.creados} nuevas, ${descargaStats.ventas.actualizados} actualizadas).`,
       );
     } catch (error) {
       console.error('[Config] Error al sincronizar con la nube:', error);
-      Alert.alert('Error de Sincronización', error.message || 'Ocurrió un error inesperado al conectar con Supabase.');
+      Alert.alert(
+        'Error de Sincronización',
+        error.message || 'Ocurrió un error inesperado al conectar con Supabase.',
+      );
     } finally {
       setIsBackupLoading(false);
     }
@@ -79,7 +79,10 @@ export default function ConfigScreen() {
       const fecha = await exportarBackup(db);
       const nowStr = new Date().toLocaleString();
       setUltimoBackup(nowStr);
-      Alert.alert('Copia de Seguridad Exportada', `El archivo de copia local se ha generado y compartido exitosamente (${fecha}).`);
+      Alert.alert(
+        'Copia de Seguridad Exportada',
+        `El archivo de copia local se ha generado y compartido exitosamente (${fecha}).`,
+      );
     } catch (error) {
       console.error('[Config] Error al exportar JSON:', error);
       Alert.alert('Error', 'No se pudo exportar el archivo de copia local.');
@@ -99,14 +102,17 @@ export default function ConfigScreen() {
         Alert.alert(
           'Restauración Exitosa',
           `Se han integrado correctamente todos los registros:\n\n` +
-          `• Productos: ${res.productos}\n` +
-          `• Ventas: ${res.ventas}\n` +
-          `• Detalles de venta: ${res.detalles}`
+            `• Productos: ${res.productos}\n` +
+            `• Ventas: ${res.ventas}\n` +
+            `• Detalles de venta: ${res.detalles}`,
         );
       }
     } catch (error) {
       console.error('[Config] Error al importar JSON:', error);
-      Alert.alert('Error de Restauración', error.message || 'No se pudo restaurar la base de datos a partir del archivo seleccionado.');
+      Alert.alert(
+        'Error de Restauración',
+        error.message || 'No se pudo restaurar la base de datos a partir del archivo seleccionado.',
+      );
     } finally {
       setIsBackupLoading(false);
     }
@@ -117,14 +123,14 @@ export default function ConfigScreen() {
     setLoading(true);
     try {
       const turnoRes = await db.getFirstAsync(
-        "SELECT value FROM app_config WHERE key = 'turno_activo';"
+        "SELECT value FROM app_config WHERE key = 'turno_activo';",
       );
       if (turnoRes && turnoRes.value) {
         setTurnoActivo(turnoRes.value);
       }
 
       const backupRes = await db.getFirstAsync(
-        "SELECT value FROM app_config WHERE key = 'ultimo_backup';"
+        "SELECT value FROM app_config WHERE key = 'ultimo_backup';",
       );
       if (backupRes && backupRes.value) {
         setUltimoBackup(backupRes.value);
@@ -146,10 +152,9 @@ export default function ConfigScreen() {
 
   const handleToggleTurno = async (nuevoTurno) => {
     try {
-      await db.runAsync(
-        "UPDATE app_config SET value = ? WHERE key = 'turno_activo';",
-        [nuevoTurno]
-      );
+      await db.runAsync("UPDATE app_config SET value = ? WHERE key = 'turno_activo';", [
+        nuevoTurno,
+      ]);
       setTurnoActivo(nuevoTurno);
     } catch (err) {
       console.error('[Config] Error al guardar turno en DB:', err);
@@ -176,36 +181,24 @@ export default function ConfigScreen() {
             <CustomText style={styles.settingLabel}>Turno activo:</CustomText>
             <View style={styles.toggleContainer}>
               <TouchableOpacity
-                style={[
-                  styles.toggleBtn,
-                  turnoActivo === 'Mañana' && styles.toggleBtnActive,
-                ]}
+                style={[styles.toggleBtn, turnoActivo === 'Mañana' && styles.toggleBtnActive]}
                 activeOpacity={0.7}
                 onPress={() => handleToggleTurno('Mañana')}
               >
                 <CustomText
-                  style={[
-                    styles.toggleText,
-                    turnoActivo === 'Mañana' && styles.toggleTextActive,
-                  ]}
+                  style={[styles.toggleText, turnoActivo === 'Mañana' && styles.toggleTextActive]}
                 >
                   Mañana
                 </CustomText>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[
-                  styles.toggleBtn,
-                  turnoActivo === 'Tarde' && styles.toggleBtnActive,
-                ]}
+                style={[styles.toggleBtn, turnoActivo === 'Tarde' && styles.toggleBtnActive]}
                 activeOpacity={0.7}
                 onPress={() => handleToggleTurno('Tarde')}
               >
                 <CustomText
-                  style={[
-                    styles.toggleText,
-                    turnoActivo === 'Tarde' && styles.toggleTextActive,
-                  ]}
+                  style={[styles.toggleText, turnoActivo === 'Tarde' && styles.toggleTextActive]}
                 >
                   Tarde
                 </CustomText>
@@ -213,7 +206,12 @@ export default function ConfigScreen() {
             </View>
           </View>
 
-          <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+          <View
+            style={[
+              styles.settingRow,
+              { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 },
+            ]}
+          >
             <CustomText style={styles.settingLabel}>Mostrar textos en menú:</CustomText>
             <Switch
               value={mostrarEtiquetasMenu}
@@ -223,7 +221,12 @@ export default function ConfigScreen() {
             />
           </View>
 
-          <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+          <View
+            style={[
+              styles.settingRow,
+              { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 },
+            ]}
+          >
             <CustomText style={styles.settingLabel}>Medios de Pago (QR):</CustomText>
             <TouchableOpacity
               style={styles.actionBtn}
@@ -234,7 +237,12 @@ export default function ConfigScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+          <View
+            style={[
+              styles.settingRow,
+              { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 },
+            ]}
+          >
             <CustomText style={styles.settingLabel}>Conexión Nube (Supabase):</CustomText>
             <TouchableOpacity
               style={styles.actionBtn}
@@ -246,7 +254,12 @@ export default function ConfigScreen() {
           </View>
 
           {/* Catálogo de Productos como menú independiente */}
-          <View style={[styles.settingRow, { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 }]}>
+          <View
+            style={[
+              styles.settingRow,
+              { marginTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 12 },
+            ]}
+          >
             <CustomText style={styles.settingLabel}>Catálogo de Productos:</CustomText>
             <TouchableOpacity
               style={styles.actionBtn}
@@ -264,9 +277,12 @@ export default function ConfigScreen() {
 
           {/* Nube */}
           <View style={{ marginBottom: 16 }}>
-            <CustomText style={styles.backupSubTitle}>Sincronización en la Nube (Online)</CustomText>
+            <CustomText style={styles.backupSubTitle}>
+              Sincronización en la Nube (Online)
+            </CustomText>
             <CustomText style={styles.backupNoticeText}>
-              Respalda y recupera tus ventas y catálogo al instante sincronizando de forma bidireccional con Supabase.
+              Respalda y recupera tus ventas y catálogo al instante sincronizando de forma
+              bidireccional con Supabase.
             </CustomText>
             <TouchableOpacity
               style={[styles.primaryBackupBtn, isBackupLoading && styles.backupBtnDisabled]}
@@ -288,7 +304,11 @@ export default function ConfigScreen() {
             </CustomText>
             <View style={styles.rowButtons}>
               <TouchableOpacity
-                style={[styles.secondaryBackupBtn, { marginRight: 8 }, isBackupLoading && styles.backupBtnDisabled]}
+                style={[
+                  styles.secondaryBackupBtn,
+                  { marginRight: 8 },
+                  isBackupLoading && styles.backupBtnDisabled,
+                ]}
                 disabled={isBackupLoading}
                 activeOpacity={0.8}
                 onPress={handleExportarJSON}

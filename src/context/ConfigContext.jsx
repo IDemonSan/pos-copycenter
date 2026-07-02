@@ -53,7 +53,14 @@ export function ConfigProvider({ children }) {
   };
 
   return (
-    <ConfigContext.Provider value={{ mostrarEtiquetasMenu, setMostrarEtiquetasMenu, mostrarBannerReconexion, setMostrarBannerReconexion }}>
+    <ConfigContext.Provider
+      value={{
+        mostrarEtiquetasMenu,
+        setMostrarEtiquetasMenu,
+        mostrarBannerReconexion,
+        setMostrarBannerReconexion,
+      }}
+    >
       {children}
     </ConfigContext.Provider>
   );

@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  Switch
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -58,7 +58,10 @@ export default function SupabaseConfigScreen() {
     const passwordTrimmed = supabaseUserPassword.trim();
 
     if (!urlTrimmed || !keyTrimmed || !emailTrimmed || !passwordTrimmed) {
-      Alert.alert('Faltan datos', 'Por favor ingresa todos los campos obligatorios del formulario.');
+      Alert.alert(
+        'Faltan datos',
+        'Por favor ingresa todos los campos obligatorios del formulario.',
+      );
       return;
     }
 
@@ -84,7 +87,7 @@ export default function SupabaseConfigScreen() {
             text: 'Aceptar',
             onPress: () => navigation.goBack(),
           },
-        ]
+        ],
       );
     } catch (error) {
       console.error('[SupabaseConfig] Error al guardar credenciales:', error);
@@ -111,7 +114,8 @@ export default function SupabaseConfigScreen() {
         <View style={styles.card}>
           <CustomText style={styles.title}>Conexión con la Nube</CustomText>
           <CustomText style={styles.subtitle}>
-            Configura las credenciales de tu proyecto de Supabase para activar la sincronización y el respaldo automático de ventas en segundo plano.
+            Configura las credenciales de tu proyecto de Supabase para activar la sincronización y
+            el respaldo automático de ventas en segundo plano.
           </CustomText>
 
           <CustomText style={styles.label}>URL del Proyecto Supabase *</CustomText>
@@ -135,8 +139,17 @@ export default function SupabaseConfigScreen() {
             autoCorrect={false}
           />
 
-          <View style={{ marginVertical: 12, borderTopWidth: 1, borderTopColor: COLORS.borde, paddingTop: 16 }}>
-            <CustomText style={[styles.title, { fontSize: 16 }]}>Credenciales del Administrador</CustomText>
+          <View
+            style={{
+              marginVertical: 12,
+              borderTopWidth: 1,
+              borderTopColor: COLORS.borde,
+              paddingTop: 16,
+            }}
+          >
+            <CustomText style={[styles.title, { fontSize: 16 }]}>
+              Credenciales del Administrador
+            </CustomText>
             <CustomText style={[styles.subtitle, { marginBottom: 12 }]}>
               Ingresa el correo y la contraseña de la cuenta autorizada creada en Supabase Auth.
             </CustomText>

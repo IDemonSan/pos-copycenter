@@ -6,23 +6,23 @@
 export async function getPendientesSync(db) {
   try {
     const prodRes = await db.getFirstAsync(
-      "SELECT COUNT(*) as count FROM productos WHERE is_synced = 0;"
+      'SELECT COUNT(*) as count FROM productos WHERE is_synced = 0;',
     );
     const ventasRes = await db.getFirstAsync(
-      "SELECT COUNT(*) as count FROM ventas WHERE is_synced = 0;"
+      'SELECT COUNT(*) as count FROM ventas WHERE is_synced = 0;',
     );
     // detalle_ventas se considera pendiente si su venta asociada no está sincronizada
     const detRes = await db.getFirstAsync(
       `SELECT COUNT(*) as count
        FROM detalle_ventas d
        JOIN ventas v ON d.venta_id = v.id
-       WHERE v.is_synced = 0;`
+       WHERE v.is_synced = 0;`,
     );
 
     return {
       productos: prodRes?.count ?? 0,
       ventas: ventasRes?.count ?? 0,
-      detalle_ventas: detRes?.count ?? 0
+      detalle_ventas: detRes?.count ?? 0,
     };
   } catch (error) {
     console.error('[DB Query] Error en getPendientesSync:', error);
@@ -37,9 +37,7 @@ export async function getPendientesSync(db) {
  */
 export async function getLoteVentasSinSync(db) {
   try {
-    return await db.getAllAsync(
-      "SELECT * FROM ventas WHERE is_synced = 0 LIMIT 100;"
-    );
+    return await db.getAllAsync('SELECT * FROM ventas WHERE is_synced = 0 LIMIT 100;');
   } catch (error) {
     console.error('[DB Query] Error en getLoteVentasSinSync:', error);
     throw error;
@@ -53,9 +51,7 @@ export async function getLoteVentasSinSync(db) {
  */
 export async function getLoteProductosSinSync(db) {
   try {
-    return await db.getAllAsync(
-      "SELECT * FROM productos WHERE is_synced = 0 LIMIT 100;"
-    );
+    return await db.getAllAsync('SELECT * FROM productos WHERE is_synced = 0 LIMIT 100;');
   } catch (error) {
     console.error('[DB Query] Error en getLoteProductosSinSync:', error);
     throw error;
@@ -75,7 +71,7 @@ export async function getLoteDetallesSinSync(db) {
        FROM detalle_ventas d
        JOIN ventas v ON d.venta_id = v.id
        WHERE v.is_synced = 0
-       LIMIT 100;`
+       LIMIT 100;`,
     );
   } catch (error) {
     console.error('[DB Query] Error en getLoteDetallesSinSync:', error);
@@ -118,7 +114,7 @@ export async function marcarSincronizados(db, { tabla, ids }) {
       `UPDATE ${tabla}
        SET is_synced = 1
        WHERE id IN (${placeholders});`,
-      ids
+      ids,
     );
   } catch (error) {
     console.error(`[DB Query] Error al marcar sincronizados en ${tabla}:`, error);

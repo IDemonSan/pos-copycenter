@@ -1,8 +1,6 @@
 import CustomText from './CustomText';
 import React, { useState, useEffect } from 'react';
-import {
-  StyleSheet, TouchableOpacity, ActivityIndicator, Alert, View
-} from 'react-native';
+import { StyleSheet, TouchableOpacity, ActivityIndicator, Alert, View } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { useAuth } from '../services/authService';
 import COLORS from '../constants/colors';
@@ -32,7 +30,7 @@ export default function ReconnectBanner() {
     } catch (e) {
       Alert.alert(
         'Sin conexión',
-        'No se pudo reconectar con Supabase. El respaldo se reanudará automáticamente cuando haya internet.'
+        'No se pudo reconectar con Supabase. El respaldo se reanudará automáticamente cuando haya internet.',
       );
     }
   };
@@ -48,9 +46,7 @@ export default function ReconnectBanner() {
         <CustomText style={styles.text}>
           {isReconnecting ? 'Reconectando respaldo...' : 'Respaldo en pausa — Toca para reconectar'}
         </CustomText>
-        {isReconnecting && (
-          <ActivityIndicator size="small" color="#fff" style={styles.loader} />
-        )}
+        {isReconnecting && <ActivityIndicator size="small" color="#fff" style={styles.loader} />}
       </View>
     </TouchableOpacity>
   );

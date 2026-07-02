@@ -11,7 +11,7 @@ export async function getResumenDia(db, fecha) {
        FROM ventas
        WHERE fecha_venta = ?
          AND anulado_at IS NULL;`,
-      [fecha]
+      [fecha],
     );
 
     const porAula = await db.getAllAsync(
@@ -21,12 +21,12 @@ export async function getResumenDia(db, fecha) {
          AND anulado_at IS NULL
        GROUP BY aula
        ORDER BY total_cents DESC;`,
-      [fecha]
+      [fecha],
     );
 
     return {
       total_dia_cents: totalRes?.total_dia_cents ?? 0,
-      por_aula: porAula
+      por_aula: porAula,
     };
   } catch (error) {
     console.error('[DB Query] Error en getResumenDia:', error);
@@ -57,7 +57,7 @@ export async function getDeudaPorAula(db, mes) {
          AND strftime('%Y-%m', fecha_venta) = ?
        GROUP BY aula
        ORDER BY deuda_cents DESC;`,
-      [mes]
+      [mes],
     );
   } catch (error) {
     console.error('[DB Query] Error en getDeudaPorAula:', error);
@@ -79,7 +79,7 @@ export async function getTotalPorDia(db, fecha) {
        FROM ventas
        WHERE fecha_venta = ?
          AND anulado_at IS NULL;`,
-      [fecha]
+      [fecha],
     );
     return {
       total_cents: res?.total_cents ?? 0,
@@ -105,7 +105,7 @@ export async function getTotalPorMes(db, mes) {
        FROM ventas
        WHERE strftime('%Y-%m', fecha_venta) = ?
          AND anulado_at IS NULL;`,
-      [mes]
+      [mes],
     );
     return {
       total_cents: res?.total_cents ?? 0,
@@ -134,7 +134,7 @@ export async function getTotalMesAnterior(db, mesActual) {
        FROM ventas
        WHERE strftime('%Y-%m', fecha_venta) = ?
          AND anulado_at IS NULL;`,
-      [mesAnterior]
+      [mesAnterior],
     );
 
     return {
@@ -164,7 +164,7 @@ export async function getVentasPorDiaDelMes(db, mes) {
          AND anulado_at IS NULL
        GROUP BY fecha_venta
        ORDER BY fecha_venta ASC;`,
-      [mes]
+      [mes],
     );
   } catch (error) {
     console.error('[DB Query] Error en getVentasPorDiaDelMes:', error);
@@ -189,7 +189,7 @@ export async function getVentasPorMesDelAnio(db, anio) {
          AND anulado_at IS NULL
        GROUP BY strftime('%Y-%m', fecha_venta)
        ORDER BY mes ASC;`,
-      [String(anio)]
+      [String(anio)],
     );
   } catch (error) {
     console.error('[DB Query] Error en getVentasPorMesDelAnio:', error);
@@ -218,7 +218,7 @@ export async function getVentasDelDiaAgrupadas(db, fecha) {
        WHERE v.fecha_venta = ?
          AND v.anulado_at IS NULL
        ORDER BY v.aula ASC;`,
-      [fecha]
+      [fecha],
     );
     return ventas;
   } catch (error) {
@@ -244,10 +244,10 @@ export async function getDeudaAula(db, { aula, mes }) {
          AND total_cents > COALESCE(pagado_cents, 0)
          AND anulado_at IS NULL
          AND strftime('%Y-%m', fecha_venta) = ?;`,
-      [aula, mes]
+      [aula, mes],
     );
     return {
-      deuda_cents: res?.deuda_cents ?? 0
+      deuda_cents: res?.deuda_cents ?? 0,
     };
   } catch (error) {
     console.error('[DB Query] Error en getDeudaAula:', error);

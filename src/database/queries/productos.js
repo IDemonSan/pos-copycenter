@@ -8,7 +8,7 @@ export async function getProductosActivos(db) {
     return await db.getAllAsync(
       `SELECT * FROM productos
        WHERE activo = 1
-       ORDER BY orden_prioridad ASC;`
+       ORDER BY orden_prioridad ASC;`,
     );
   } catch (error) {
     console.error('[DB Query] Error en getProductosActivos:', error);
@@ -25,7 +25,7 @@ export async function getTodosLosProductos(db) {
   try {
     return await db.getAllAsync(
       `SELECT * FROM productos
-       ORDER BY orden_prioridad ASC;`
+       ORDER BY orden_prioridad ASC;`,
     );
   } catch (error) {
     console.error('[DB Query] Error en getTodosLosProductos:', error);
@@ -59,8 +59,8 @@ export async function insertarProducto(db, producto) {
         producto.is_custom ?? 0,
         producto.orden_prioridad ?? 0,
         producto.activo ?? 1,
-        now
-      ]
+        now,
+      ],
     );
   } catch (error) {
     console.error('[DB Query] Error al insertar producto:', error);
@@ -103,8 +103,8 @@ export async function actualizarProducto(db, producto) {
         producto.orden_prioridad,
         producto.activo,
         now,
-        producto.id
-      ]
+        producto.id,
+      ],
     );
   } catch (error) {
     console.error('[DB Query] Error al actualizar producto:', error);
@@ -154,11 +154,11 @@ export async function intercambiarOrden(db, { idA, ordenA, idB, ordenB }) {
     await db.withTransactionAsync(async () => {
       await db.runAsync(
         `UPDATE productos SET orden_prioridad = ?, is_synced = 0, updated_at = ? WHERE id = ?;`,
-        [ordenA, now, idA]
+        [ordenA, now, idA],
       );
       await db.runAsync(
         `UPDATE productos SET orden_prioridad = ?, is_synced = 0, updated_at = ? WHERE id = ?;`,
-        [ordenB, now, idB]
+        [ordenB, now, idB],
       );
     });
   } catch (error) {
